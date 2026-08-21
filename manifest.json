@@ -1,0 +1,10 @@
+{
+  "id": "lythic",
+  "name": "Lythic",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "AI-augmented Obsidian note-taking system — vault intelligence, graph enhancements, and multi-agent workflows.",
+  "author": "Ali Nikkhah",
+  "authorUrl": "https://github.com/AliNikkhah2001",
+  "isDesktopOnly": false
+}

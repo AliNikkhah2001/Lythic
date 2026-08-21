@@ -1,0 +1,121 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "metis": {
+      "name": "metis",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://api.metisai.ir/openai/v1"
+      },
+      "apiKey": "tpsg-HT0wZnLjl7TXfnvF5vBIGjJ2zJc6KGi"
+    }
+  },
+  "mcp": {
+    "servers": {
+      "enabled": true,
+      "agent-lsp": {
+        "type": "local",
+        "command": ["npx", "-y", "agent-lsp"],
+        "enabled": true
+      },
+      "github": {
+        "type": "remote",
+        "url": "https://api.githubcopilot.com/mcp",
+        "enabled": true
+      },
+      "context7": {
+        "type": "local",
+        "command": ["npx", "-y", "@upstash/context7-mcp"],
+        "enabled": true
+      },
+      "playwright": {
+        "type": "local",
+        "command": ["npx", "-y", "@modelcontextprotocol/server-playwright"],
+        "enabled": true
+      },
+      "semantic-scholar": {
+        "type": "local",
+        "command": ["uvx", "s2-mcp-server"],
+        "env": {
+          "SEMANTIC_SCHOLAR_API_KEY": "{env:SEMANTIC_SCHOLAR_API_KEY}"
+        }
+      },
+      "arxiv": {
+        "type": "local",
+        "command": ["uvx", "arxiv-mcp-server"]
+      },
+      "kubernetes": {
+        "type": "local",
+        "command": ["kubernetes-mcp-server"]
+      },
+      "ruff": {
+        "type": "local",
+        "command": ["uvx", "ruff-mcp-server"]
+      },
+      "clean-code": {
+        "type": "local",
+        "command": ["npx", "-y", "mcp-clean-code"]
+      },
+      "colab-exec": {
+        "type": "local",
+        "command": ["uvx", "mcp-server-colab-exec"]
+      },
+      "kaggle-exec": {
+        "type": "local",
+        "command": ["uvx", "mcp-server-kaggle-exec"]
+      },
+      "runpod": {
+        "type": "local",
+        "command": ["uvx", "runpod-mcp-server"]
+      },
+      "sonarqube": {
+        "type": "remote",
+        "url": "https://sonarqube.example.com/mcp"
+      },
+      "gitlab-ci": {
+        "type": "local",
+        "command": ["uvx", "--from", "gitlab-ci-mcp", "gitlab-ci-mcp"],
+        "env": {
+          "GITLAB_URL": "{env:GITLAB_URL}",
+          "GITLAB_TOKEN": "{env:GITLAB_TOKEN}",
+          "GITLAB_PROJECT_PATH": "{env:GITLAB_PROJECT_PATH}"
+        }
+      },
+      "mcpfinder": {
+        "type": "local",
+        "command": ["npx", "-y", "@anthropic/mcpfinder"]
+      }
+    }
+  },
+  "agent": {
+    "review": {
+      "description": "Code review specialist - correctness, design, readability, security, performance"
+    },
+    "architect": {
+      "description": "System design & architecture - ADRs, diagrams, trade-offs, migrations"
+    },
+    "security-auditor": {
+      "description": "Security vulnerability detection - OWASP, CWE, STRIDE, crypto, auth"
+    },
+    "test-engineer": {
+      "description": "TDD test author - writes tests first, verifies RED, targets 80%+ coverage"
+    },
+    "backend-specialist": {
+      "description": "Backend development - API, database, caching, distributed systems patterns"
+    },
+    "frontend-specialist": {
+      "description": "Frontend development - React, TypeScript, UI/UX, accessibility, animations"
+    },
+    "ml-engineer": {
+      "description": "ML engineering - PyTorch, training loops, GPU optimization, model deployment"
+    }
+  },
+  "instructions": [
+    "AGENTS.md",
+    ".opencode/rules/*.md"
+  ],
+  "plugins": [
+    "./.opencode/plugins/compaction.ts",
+    "superpowers@git+https://github.com/obra/superpowers.git"
+  ]
+}

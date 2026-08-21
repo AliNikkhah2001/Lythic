@@ -1,0 +1,26 @@
+{
+  "name": "lythic",
+  "version": "0.1.0",
+  "description": "Lythic — Obsidian note-taking system with AI-augmented vault, graph, and autonomous agents",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,js,json,md}\"",
+    "test": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["obsidian", "obsidian-plugin", "lythic", "note-taking", "knowledge-graph"],
+  "author": "Ali Nikkhah",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "0.20.2",
+    "obsidian": "latest",
+    "tslib": "2.6.2",
+    "typescript": "5.4.5"
+  }
+}

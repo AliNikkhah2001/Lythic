@@ -36,3 +36,35 @@ def test_should_validate_ego_depth() -> None:
     g = VaultGraph(nodes=(), edges=())
     with pytest.raises(ValueError):
         g.ego_graph("a", depth=0)
+
+
+def test_should_dedup_edges_in_cytoscape() -> None:
+    g = VaultGraph(
+        nodes=(GraphNode(node_id="a", label="A"), GraphNode(node_id="b", label="B")),
+        edges=(
+            GraphEdge(source="a", target="b"),
+            GraphEdge(source="a", target="b"),
+            GraphEdge(source="b", target="a"),
+        ),
+    )
+    j = g.to_cytoscape_json()
+    assert len(j["edges"]) == 2  # type: ignore[arg-type]
+
+
+def test_should_add_positions_via_spring_layout() -> None:
+    g = VaultGraph(
+        nodes=(GraphNode(node_id="a", label="A"), GraphNode(node_id="b", label="B")),
+        edges=(GraphEdge(source="a", target="b"),),
+    )
+    j = g.to_cytoscape_with_positions()
+    nodes = j["nodes"]  # type: ignore[assignment]
+    assert len(nodes) == 2  # type: ignore[arg-type]
+    for node in nodes:  # type: ignore[union-attr]
+        assert "position" in node
+        assert "x" in node["position"]
+
+
+def test_should_handle_empty_graph_positions() -> None:
+    g = VaultGraph(nodes=(), edges=())
+    j = g.to_cytoscape_with_positions()
+    assert j["nodes"] == []  # type: ignore[union-attr]

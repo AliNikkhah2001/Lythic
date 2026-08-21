@@ -31,7 +31,6 @@ def run_app(vault_root: Path) -> int:
             QMainWindow,
             QSplitter,
             QTextEdit,
-            QTreeView,
         )
     except ImportError as e:  # pragma: no cover
         print(f"Qt import failed: {e}")
@@ -55,7 +54,7 @@ def run_app(vault_root: Path) -> int:
 
     win = QMainWindow()
     win.setWindowTitle(f"Lythic — {vault_root} — {len(graph.nodes)} notes")
-    win.resize(1200, 800)
+    win.resize(1400, 900)
 
     splitter = QSplitter(Qt.Horizontal)
 
@@ -79,16 +78,26 @@ def run_app(vault_root: Path) -> int:
         preview.update_content(editor.content)
     preview_widget = preview.create_widget()
     if preview_widget is None:
-        # Fallback QTextEdit showing HTML source
         fallback = QTextEdit()
         fallback.setReadOnly(True)
         fallback.setPlainText(preview.html or "<preview>")
         preview_widget = fallback
 
+    # Far-right: graph (visible interactive, not hidden export)
+    gv = GraphView()
+    gv.set_graph(graph)
+    graph_widget = gv.create_widget()
+    if graph_widget is None:
+        fallback_g = QTextEdit()
+        fallback_g.setReadOnly(True)
+        fallback_g.setPlainText(f"Graph: {len(graph.nodes)} nodes, {len(graph.edges)} edges")
+        graph_widget = fallback_g
+
     splitter.addWidget(tree_view)
     splitter.addWidget(editor_widget)
     splitter.addWidget(preview_widget)
-    splitter.setSizes([250, 500, 450])
+    splitter.addWidget(graph_widget)
+    splitter.setSizes([240, 420, 380, 360])
 
     win.setCentralWidget(splitter)
 
@@ -97,19 +106,65 @@ def run_app(vault_root: Path) -> int:
 
     git = create_git_service(Path.cwd())
     st = git.status()
-    win.statusBar().showMessage(
-        f"Indexed {len(graph.nodes)} notes | {len(graph.edges)} links | git:{st.branch or '—'}{' dirty' if st.is_dirty else ''} | Qt:{binding}"
+    status_msg = (
+        f"Indexed {len(graph.nodes)} nodes | {len(graph.edges)} links | "
+        f"git:{st.branch or '—'}{' dirty' if st.is_dirty else ''} | Qt:{binding}"
     )
+    win.statusBar().showMessage(status_msg)
+
+    # Watchdog + QTimer 200ms debounce (fixes watcher.py:102 never started)
+    try:
+        from PySide6.QtCore import QTimer
+
+        from lythic.infrastructure.sqlite_repo import SqliteVaultRepo
+        from lythic.infrastructure.watcher import VaultIndexer, start_observer
+
+        repo_for_watch = SqliteVaultRepo(vault_root / ".lythic" / "cache.db")
+        indexer = VaultIndexer(vault_root, repo_for_watch, svc.parser)
+        pending: set[Path] = set()
+        timer = QTimer()
+        timer.setSingleShot(True)
+        timer.setInterval(200)
+
+        def on_timer() -> None:
+            for path in list(pending):
+                indexer.index_file(path)
+            pending.clear()
+            refreshed = svc.build_graph()
+            gv.set_graph(refreshed)
+            # refresh web view without full reload if possible
+            try:
+                new_html = Path("/tmp/lythic-graph.html")
+                gv.export_html(new_html)
+                if hasattr(graph_widget, "setHtml"):
+                    html_str = new_html.read_text(encoding="utf-8")
+                    base = Path(__file__).parent.parent / "assets/web"
+                    graph_widget.setHtml(html_str, base.as_uri() + "/")
+            except Exception:
+                pass
+            win.setWindowTitle(f"Lythic — {vault_root} — {len(refreshed.nodes)} notes")
+            win.statusBar().showMessage(
+                f"Live: {len(refreshed.nodes)} nodes | {len(refreshed.edges)} links"
+            )
+
+        timer.timeout.connect(on_timer)
+
+        def on_change(path: Path) -> None:
+            pending.add(path)
+            if not timer.isActive():
+                timer.start()
+
+        observer = start_observer(vault_root, on_change)
+        # ensure observer stops on close
+        app.aboutToQuit.connect(lambda: (observer.stop(), observer.join(timeout=1)))  # type: ignore[attr-defined]
+    except Exception:
+        pass
 
     win.show()
-    # Also export graph HTML for browser fallback
-    gv = GraphView()
-    gv.set_graph(graph)
+    # Browser fallback export
     gv.export_html(Path("/tmp/lythic-graph.html"))
-    print(
-        f"Graph exported → /tmp/lythic-graph.html  ({len(graph.nodes)} nodes, {len(graph.edges)} edges)"
-    )
-    print(f"Lythic GUI running — vault={vault_root}  close window to exit")
+    print(f"Graph → /tmp/lythic-graph.html ({len(graph.nodes)} nodes, {len(graph.edges)} edges)")
+    print(f"Lythic GUI running — vault={vault_root} 4-pane close window to exit")
 
     code = app.exec()
     svc.close()

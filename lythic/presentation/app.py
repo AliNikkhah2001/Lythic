@@ -39,9 +39,12 @@ def run_app(vault_root: Path) -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("Lythic")
     app.setOrganizationName("Lythic")
+    app.setStyle("Fusion")
 
     # Lazy imports after QApplication (needs event loop)
     from lythic.application.vault_service import VaultService
+    from lythic.infrastructure.qss_builder import build_qss
+    from lythic.infrastructure.theme_service import ThemeService
     from lythic.presentation.EditorPane import EditorPane
     from lythic.presentation.GraphView import GraphView
     from lythic.presentation.PreviewPane import PreviewPane
@@ -51,6 +54,11 @@ def run_app(vault_root: Path) -> int:
     svc = VaultService(vault_root)
     svc.index_all()
     graph = svc.build_graph()
+
+    # Theme (M1+M9) — QSS Fusion glass for native shell
+    theme_svc = ThemeService(vault_root=vault_root)
+    active_theme = theme_svc.current_name()
+    app.setStyleSheet(build_qss(active_theme, vault_root))
 
     win = QMainWindow()
     win.setWindowTitle(f"Lythic — {vault_root} — {len(graph.nodes)} notes")
@@ -71,8 +79,9 @@ def run_app(vault_root: Path) -> int:
         editor_widget = QTextEdit()
         editor_widget.setPlainText(editor.content or "# Lythic\nOpen a note...")
 
-    # Right: preview
+    # Right: preview (glass design system)
     preview = PreviewPane(svc.parser)
+    preview.set_theme(active_theme)
     if first_md:
         preview.update_content(editor.content)
     preview_widget = preview.create_widget()
@@ -84,6 +93,7 @@ def run_app(vault_root: Path) -> int:
 
     # Far-right: graph (visible interactive, not hidden export)
     gv = GraphView()
+    gv.set_theme(active_theme)
     gv.set_graph(graph)
     graph_widget = gv.create_widget()
     if graph_widget is None:
@@ -128,10 +138,7 @@ def run_app(vault_root: Path) -> int:
     win.statusBar().showMessage(status_msg)
 
     try:
-        from lythic.infrastructure.theme_service import ThemeService
-
-        theme_svc = ThemeService(vault_root=vault_root)
-        win.setProperty("theme", theme_svc.current_name())
+        win.setProperty("theme", active_theme)
         autosync = GitAutoSync(vault_root, interval_ms=30000)
         autosync.start()
         app.aboutToQuit.connect(lambda: autosync.stop())
@@ -164,8 +171,9 @@ def run_app(vault_root: Path) -> int:
                 gv.export_html(new_html)
                 if hasattr(graph_widget, "setHtml"):
                     html_str = new_html.read_text(encoding="utf-8")
-                    base = Path(__file__).parent.parent / "assets/web"
-                    graph_widget.setHtml(html_str, base.as_uri() + "/")
+                    from lythic.infrastructure.resources import base_url
+
+                    graph_widget.setHtml(html_str, base_url())
             except Exception:
                 pass
             win.setWindowTitle(f"Lythic — {vault_root} — {len(refreshed.nodes)} notes")

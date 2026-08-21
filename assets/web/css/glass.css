@@ -1,0 +1,90 @@
+/* Lythic Glass — Hyper-realistic pure CSS (css.glass + Hype4) — offline, <1KB, <1ms swap
+   Sources: css.glass 451★, hype4.academy, tailwind backdrop-blur, shadcn supports, MDN backdrop-filter
+   Recipe: rgba + blur(12-20px) saturate(160-200%) + border 1px rgba(255,255,255,0.18) + radius 12-24px + shadow 0 8px 32px
+*/
+.glass{
+  background: var(--glass-bg, rgba(255,255,255,0.10));
+  backdrop-filter: blur(var(--blur, 16px)) saturate(var(--saturate, 180%));
+  -webkit-backdrop-filter: blur(var(--blur, 16px)) saturate(var(--saturate, 180%));
+  border: 1px solid var(--glass-border, var(--border, rgba(255,255,255,0.18)));
+  border-radius: var(--radius, 12px);
+  box-shadow: var(--shadow, 0 8px 32px rgba(0,0,0,0.10)), var(--highlight, inset 0 1px rgba(255,255,255,0.5));
+  will-change: transform;
+  contain: layout style;
+  background-clip: padding-box;
+}
+.glass::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,var(--streak-opacity,0.35)) 0%, transparent 45%);
+  pointer-events:none;
+  opacity:0.6;
+}
+.glass--hero{
+  background: var(--glass-bg, rgba(255,255,255,0.14));
+  backdrop-filter: blur(var(--blur-hero, 24px)) saturate(var(--glass-saturate, 200%));
+  -webkit-backdrop-filter: blur(var(--blur-hero, 24px)) saturate(var(--glass-saturate, 200%));
+  border-radius: var(--radius-hero, 24px);
+  box-shadow: var(--shadow-hero, 0 24px 64px rgba(0,0,0,0.25));
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.25));
+}
+.glass--subtle{
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+.glass--toolbar{
+  background: var(--glass-bg, rgba(255,255,255,0.10));
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border-bottom: 1px solid var(--border, rgba(255,255,255,0.18));
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+.glass--card{
+  padding: var(--spacing-md, 16px);
+  background: var(--glass-bg, rgba(255,255,255,0.10));
+  border-radius: var(--radius, 12px);
+}
+/* Tailwind equivalent: backdrop-blur-xl bg-white/10 border border-white/20 — used in WebEngine */
+/* Shadcn: supports-[backdrop-filter]:bg-background/60 */
+/* Neumorphism contrast for dark */
+.glass--neumorph{
+  box-shadow: 9px 9px 16px rgba(0,0,0,0.20), -9px -9px 16px rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+/* @supports fallback */
+@supports not (backdrop-filter: blur(1px)){
+  .glass, .glass--hero, .glass--toolbar{
+    background: var(--surface, #1e293b);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce){
+  .glass, .glass--hero{
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: var(--surface, #1e293b);
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  .glass, .glass--hero{
+    transition: none !important;
+    animation: none !important;
+  }
+}
+/* Motion */
+.glass, .glass--hero{
+  transition: background var(--motion-duration-normal, 200ms) var(--motion-ease, ease),
+              backdrop-filter var(--motion-duration-normal, 200ms) var(--motion-ease, ease),
+              transform var(--motion-duration-fast, 120ms) var(--motion-ease-spring, ease);
+  will-change: backdrop-filter, transform;
+}
+/* Hover lift */
+.glass:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15), var(--highlight, inset 0 1px rgba(255,255,255,0.5));
+}

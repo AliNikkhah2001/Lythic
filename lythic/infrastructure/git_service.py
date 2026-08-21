@@ -46,7 +46,7 @@ class SubprocessGitAdapter:
         self.vault_root = vault_root
         # Ignore patterns for auto-commit (pathspec)
         self._ignore_spec = pathspec.PathSpec.from_lines(
-            "gitignore",
+            "gitwildmatch",
             [
                 ".git/*",
                 ".obsidian/workspace.json",

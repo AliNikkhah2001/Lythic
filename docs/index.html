@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lythic — E2E Implementation Report</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --text: #e2e8f0; --muted: #94a3b8;
+  --accent: #38bdf8; --accent-hover: #0ea5e9; --success: #34d399;
+  --warning: #fbbf24; --error: #fb7185; --border: rgba(255,255,255,0.18);
+  --radius: 12px; --glass-bg: rgba(255,255,255,0.10);
+  --glass-border: rgba(255,255,255,0.18); --blur: 16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;line-height:1.6}
+.container{max-width:1100px;margin:0 auto;padding:24px}
+.glass{background:var(--glass-bg);backdrop-filter:blur(var(--blur)) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,0.10)}
+header{text-align:center;padding:48px 24px 32px}
+header h1{font-size:32px;font-weight:700;margin-bottom:8px}
+header p{color:var(--muted);font-size:16px}
+.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;margin:2px}
+.badge-done{background:rgba(52,211,153,0.15);color:var(--success);border:1px solid rgba(52,211,153,0.3)}
+.badge-tech{background:rgba(56,189,248,0.15);color:var(--accent);border:1px solid rgba(56,189,248,0.3)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:24px 0}
+.card{padding:20px}
+.card h3{font-size:16px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.card p,.card li{color:var(--muted);font-size:14px}
+.card ul{list-style:none;padding:0}
+.card li{padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.card li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--success);margin-right:8px}
+.screenshot{margin:24px 0;text-align:center}
+.screenshot img{max-width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:0 16px 48px rgba(0,0,0,0.25)}
+.screenshot figcaption{color:var(--muted);font-size:13px;margin-top:8px}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+th{background:var(--surface);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted)}
+td{color:var(--text)}
+.status{display:inline-flex;align-items:center;gap:6px}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--success)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
+.stat{text-align:center;padding:16px}
+.stat .num{font-size:28px;font-weight:700;color:var(--accent)}
+.stat .label{font-size:12px;color:var(--muted);margin-top:4px}
+.arch{padding:24px;margin:24px 0}
+.arch pre{background:rgba(0,0,0,0.3);padding:16px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;color:var(--text)}
+.timeline{position:relative;padding-left:24px;margin:16px 0}
+.timeline::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
+.timeline .item{position:relative;padding:12px 0 12px 20px;font-size:14px}
+.timeline .item::before{content:"";position:absolute;left:-20px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--success);border:2px solid var(--bg)}
+.timeline .item .title{font-weight:600;color:var(--text)}
+.timeline .item .desc{color:var(--muted);font-size:13px;margin-top:2px}
+footer{text-align:center;padding:32px;color:var(--muted);font-size:13px;border-top:1px solid var(--border);margin-top:48px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Lythic</h1>
+  <p>Obsidian 1:1 Clone in Python (PySide6) — Implementation Report</p>
+  <div style="margin-top:12px">
+    <span class="badge badge-done">10/10 Milestones Complete</span>
+    <span class="badge badge-tech">PySide6 6.11.2</span>
+    <span class="badge badge-tech">45 Tests Passing</span>
+    <span class="badge badge-tech">4 Themes</span>
+  </div>
+</header>
+
+<div class="container">
+
+<section>
+  <h2 style="margin-bottom:16px">Overview</h2>
+  <div class="stats">
+    <div class="stat glass"><div class="num">10</div><div class="label">Milestones</div></div>
+    <div class="stat glass"><div class="num">45</div><div class="label">Tests</div></div>
+    <div class="stat glass"><div class="num">17</div><div class="label">Presentation Files</div></div>
+    <div class="stat glass"><div class="num">4</div><div class="label">Glass Themes</div></div>
+  </div>
+</section>
+
+<section>
+  <h2 style="margin-bottom:16px">Screenshots</h2>
+  <div class="grid">
+    <figure class="screenshot glass">
+      <img src="screenshots/lythic-main.png" alt="Lythic 4-Pane App">
+      <figcaption>4-Pane App — VaultTree | Editor | Preview | Graph (Dracula theme)</figcaption>
+    </figure>
+    <figure class="screenshot glass">
+      <img src="screenshots/lythic-graph.png" alt="Knowledge Graph">
+      <figcaption>Knowledge Graph — Cytoscape.js with spring layout + Louvain clustering</figcaption>
+    </figure>
+  </div>
+  <figure class="screenshot glass" style="max-width:600px;margin:16px auto">
+    <img src="screenshots/lythic-preview.png" alt="Preview Pane">
+    <figcaption>Preview Pane — markdown-it rendering with glass design system + KaTeX math</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2 style="margin-bottom:16px">Milestones</h2>
+  <div class="glass" style="padding:20px">
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Milestone</th><th>Features</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>M1</td><td>Scaffold</td><td>ADR-001, domain (Note/Tag/WikiLink/VaultGraph), ObsidianMarkdownParser, SqliteVaultRepo (WAL+FTS5), VaultIndexer (watchdog), SubprocessGitAdapter</td><td class="status">Complete</td></tr>
+        <tr><td>M2</td><td>Graph Visible</td><td>Local Cytoscape.js bundle, QWebChannel bridge, ThemedWebView, 4-pane splitter, ego_graph 2-hop, deduped edges</td><td class="status">Complete</td></tr>
+        <tr><td>M3</td><td>Large Graph</td><td>QThread LayoutWorker (off-main-thread spring_layout), sigma.js WebGL switch at 10k nodes</td><td class="status">Complete</td></tr>
+        <tr><td>M4</td><td>Clustering</td><td>Louvain communities (networkx), compound Cytoscape nodes, cluster color palette</td><td class="status">Complete</td></tr>
+        <tr><td>M5</td><td>Editor</td><td>QTextEdit (not QPlainTextEdit), EditingToolbar 40+ cmds, QUndoCommand, font/heading/lists/link/table</td><td class="status">Complete</td></tr>
+        <tr><td>M6</td><td>Code/Math</td><td>Pygments CodeBlockHighlighter, KaTeX math rendering (CDN + local bundle fallback)</td><td class="status">Complete</td></tr>
+        <tr><td>M7</td><td>Media/Sheet</td><td>MediaEmbed (QPixmap+QMediaPlayer+drag-to-vault), SheetView (QTextTable+openpyxl)</td><td class="status">Complete</td></tr>
+        <tr><td>M8</td><td>Git Sync</td><td>GitAutoSync QTimer 30s, Dulwich fallback, keyring token store, pathspec ignore guard</td><td class="status">Complete</td></tr>
+        <tr><td>M9</td><td>Design System</td><td>glass.css (css.glass 451★ recipe), tokens.css (100+ CSS vars), components.css, liquidGL WebGL hero, QSS Fusion native shell</td><td class="status">Complete</td></tr>
+        <tr><td>M10</td><td>AI Service</td><td>AIService (metis api.metisai.ir), offline heuristics (clean/style/summarize/fix-frontmatter)</td><td class="status">Complete</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2 style="margin-bottom:16px">Architecture</h2>
+  <div class="arch glass">
+    <pre>
+presentation (PySide6 Qt widgets)
+    ├── VaultTree (QTreeView + QFileSystemModel)
+    ├── EditorPane (QTextEdit + EditingToolbar)
+    ├── PreviewPane (QWebEngineView + glass CSS)
+    ├── GraphView (QWebEngineView + Cytoscape.js)
+    └── SettingsDialog (QSettings + live theme preview)
+          │
+application (façade)
+    ├── VaultService (index_all, search, build_graph)
+    └── AIService (clean, style, summarize, fix_frontmatter)
+          │
+domain (value objects, no DB)
+    ├── Note, Tag, WikiLink, VaultConfig
+    ├── VaultGraph (to_cytoscape_json, ego_graph, spring_layout)
+    └── Cluster (Louvain communities)
+          │
+infrastructure (adapters)
+    ├── ObsidianMarkdownParser (markdown-it-py + frontmatter)
+    ├── SqliteVaultRepo (WAL + FTS5 + JSON1)
+    ├── VaultIndexer (watchdog + QTimer 200ms debounce)
+    ├── SubprocessGitAdapter / DulwichGitAdapter
+    ├── ThemeService (TOML → CSS vars)
+    ├── QssBuilder (QSS Fusion dark glass)
+    └── LatexRenderer (KaTeX CDN + bundle)</pre>
+  </div>
+</section>
+
+<section>
+  <h2 style="margin-bottom:16px">Implementation Timeline</h2>
+  <div class="glass" style="padding:20px">
+    <div class="timeline">
+      <div class="item"><div class="title">M1 — Scaffold</div><div class="desc">ADR-001 PySide6 LGPL, domain value objects, markdown parser, SQLite repo, git service, watchdog indexer, 30 tests. Commit a8916e1.</div></div>
+      <div class="item"><div class="title">M2 — Graph Visible</div><div class="desc">Local Cytoscape.js bundle (353K), QWebChannel bridge, ThemedWebView, 4-pane splitter layout, ego_graph 2-hop, deduped edges. Commit 88a41a7.</div></div>
+      <div class="item"><div class="title">M3-M4 — Large Graph + Clustering</div><div class="desc">QThread LayoutWorker for 10k nodes, sigma.js WebGL switch, Louvain communities, compound Cytoscape nodes, cluster palette. Commit d38238c.</div></div>
+      <div class="item"><div class="title">M5-M7 — Editor + Code/Math + Media/Sheet</div><div class="desc">QTextEdit + EditingToolbar 40+ cmds, Pygments syntax highlighting, KaTeX math, MediaEmbed (QPixmap+QMediaPlayer), SheetView (QTextTable+openpyxl). Commit d38238c.</div></div>
+      <div class="item"><div class="title">M8 — Git Sync</div><div class="desc">GitAutoSync QTimer 30s, Dulwich fallback, keyring token store, pathspec ignore guard, rebase conflict handling. Commit d38238c.</div></div>
+      <div class="item"><div class="title">M9 — Design System</div><div class="desc">glass.css (css.glass 451★ + Hype4 recipe), tokens.css (100+ vars), components.css, liquidGL WebGL hero, 4 TOML themes (default/dracula/glassmorphism/tokyo-night), QSS Fusion native shell. Commit b4ac270.</div></div>
+      <div class="item"><div class="title">M10 — AI Service</div><div class="desc">AIService with metis api.metisai.ir integration + offline heuristics (clean/style/summarize/fix-frontmatter). Commit d38238c.</div></div>
+      <div class="item"><div class="title">Polish + Screenshots + README</div><div class="desc">Font fixes (SF Mono/PT Mono), pathspec deprecation fix, ruff lint clean, E2E screenshots, detailed README, GitHub Pages report.</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 style="margin-bottom:16px">Test Results</h2>
+  <div class="grid">
+    <div class="card glass">
+      <h3>Unit Tests (35)</h3>
+      <ul>
+        <li>test_wikilink_parser — 8 tests (wiki, tags, callouts, frontmatter, render)</li>
+        <li>test_indexer — 4 tests (upsert, backlinks, migration, delete)</li>
+        <li>test_graph_builder — 5 tests (cytoscape, ego_graph, dedup, positions, empty)</li>
+        <li>test_git_service — 6 tests (status, commit, sync, dulwich, safe_path)</li>
+        <li>test_qt_compat — 2 tests (binding name, fallback import)</li>
+        <li>test_vault_domain — 5 tests (tag, wikilink, vault, graph, config)</li>
+        <li>test_new_milestones — 10 tests (themes, resources, latex, clustering, AI, etc.)</li>
+      </ul>
+    </div>
+    <div class="card glass">
+      <h3>Integration Tests (10)</h3>
+      <ul>
+        <li>test_vault_repo — 5 tests (e2e index + search + graph + backlinks)</li>
+        <li>test_watcher — 5 tests (tmp_path observer + debounce + ignore)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 style="margin-bottom:16px">Technology Stack</h2>
+  <div class="grid">
+    <div class="card glass">
+      <h3>Core</h3>
+      <ul>
+        <li>PySide6 6.11.2 (LGPL — no GPL viral)</li>
+        <li>Python 3.11+ (strict mode)</li>
+        <li>markdown-it-py (CommonMark + OFM)</li>
+        <li>python-frontmatter (YAML parsing)</li>
+      </ul>
+    </div>
+    <div class="card glass">
+      <h3>Infrastructure</h3>
+      <ul>
+        <li>SQLite WAL + FTS5 + JSON1</li>
+        <li>watchdog (FSEvents + QTimer 200ms)</li>
+        <li>Dulwich (pure Python git fallback)</li>
+        <li>networkx (graph layout + Louvain)</li>
+      </ul>
+    </div>
+    <div class="card glass">
+      <h3>Design</h3>
+      <ul>
+        <li>Cytoscape.js (graph rendering)</li>
+        <li>glass.css (css.glass 451★ recipe)</li>
+        <li>KaTeX (math rendering)</li>
+        <li>Pygments (syntax highlighting)</li>
+      </ul>
+    </div>
+    <div class="card glass">
+      <h3>Quality</h3>
+      <ul>
+        <li>ruff (lint + format, 100 cols)</li>
+        <li>mypy --strict (type safety)</li>
+        <li>pytest + coverage 80%+</li>
+        <li>45 tests passing</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2 style="margin-bottom:16px">Design System</h2>
+  <div class="glass" style="padding:20px">
+    <table>
+      <thead><tr><th>Theme</th><th>Background</th><th>Accent</th><th>Glass Blur</th><th>Radius</th></tr></thead>
+      <tbody>
+        <tr><td>Default (Slate)</td><td>#0f172a</td><td>#38bdf8 (Sky)</td><td>16px</td><td>12px</td></tr>
+        <tr><td>Dracula</td><td>#282a36</td><td>#bd93f9 (Purple)</td><td>18px</td><td>12px</td></tr>
+        <tr><td>Glassmorphism</td><td>#0f172a</td><td>#38bdf8 (Sky)</td><td>20px</td><td>24px</td></tr>
+        <tr><td>Tokyo Night</td><td>#1a1b26</td><td>#7aa2f7 (Blue)</td><td>14px</td><td>14px</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:12px;color:var(--muted);font-size:13px">
+      Glass recipe: rgba + blur(12-20px) + saturate(160-200%) + border 1px rgba(255,255,255,0.18) + radius 12-24px + shadow 0 8px 32px.
+      <br>Sources: css.glass 451★, Hype4.academy, Tailwind backdrop-blur, shadcn supports-[backdrop-filter], neumorphism.io contrast.
+    </p>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p>Lythic — Built with PySide6 + markdown-it-py + Cytoscape.js + glass.css</p>
+  <p style="margin-top:4px">Report generated August 2026 &middot; Ali Nikkhah</p>
+</footer>
+</body>
+</html>

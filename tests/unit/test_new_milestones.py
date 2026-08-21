@@ -35,7 +35,11 @@ def test_resources_paths() -> None:
 
 
 def test_latex_renderer() -> None:
-    from lythic.infrastructure.latex_renderer import has_katex_bundle, katex_header, render_math_html
+    from lythic.infrastructure.latex_renderer import (
+        has_katex_bundle,
+        katex_header,
+        render_math_html,
+    )
 
     html = render_math_html("Hello $x^2$ and $$y$$ world")
     assert "katex" in html
@@ -94,7 +98,12 @@ def test_ai_service_offline(tmp_path: Path) -> None:
 
 
 def test_git_service_safe_path(tmp_path: Path) -> None:
-    from lythic.infrastructure.git_service import GitAutoSync, _is_safe_path, create_git_service, load_git_token
+    from lythic.infrastructure.git_service import (
+        GitAutoSync,
+        _is_safe_path,
+        create_git_service,
+        load_git_token,
+    )
 
     vault = tmp_path / "vault"
     vault.mkdir()

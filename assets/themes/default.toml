@@ -43,7 +43,7 @@ xl = "32px"
 
 [fonts]
 sans = "system-ui, -apple-system, BlinkMacSystemFont, Inter, sans-serif"
-mono = "JetBrains Mono, ui-monospace, monospace"
+mono = "SF Mono, PT Mono, ui-monospace, monospace"
 size = "14px"
 size_sm = "12px"
 size_lg = "16px"

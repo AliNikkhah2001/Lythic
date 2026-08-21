@@ -3,6 +3,14 @@
 > **Local-first vault (`vault/*.md` plain files) + live graph + git sync — Obsidian file-compat, native desktop.**
 > Two surfaces, one vault: **Obsidian plugin** (`src/main.ts`) for inside Obsidian, and **standalone PySide6 app** (`lythic/`) that opens the same `vault/` folder with no conversion.
 
+![Lythic 4-Pane App](docs/screenshots/lythic-main.png)
+
+## Screenshots
+
+| 4-Pane App (Dracula) | Knowledge Graph (Cytoscape.js) | Preview (Glass Design) |
+|:---:|:---:|:---:|
+| ![4-Pane](docs/screenshots/lythic-main.png) | ![Graph](docs/screenshots/lythic-graph.png) | ![Preview](docs/screenshots/lythic-preview.png) |
+
 Built from `Tools_AI-MCP` starter-pack (`opencode.json` + 7 agents + 8 commands + 5 skills + `superpowers@6.3.0`) — see `docs/adr/ADR-001-lythic-python-clone.md`.
 
 **Remotes:** `origin → https://github.com/AliNikkhah2001/Lythic.git` + `legacy → https://github.com/AliNikkhah2001/Lithic_note-taking-system.git` (both pushed `main` + `feat/lythic-m1-scaffold`, PR https://github.com/AliNikkhah2001/Lythic/pull/1).
@@ -11,30 +19,40 @@ Built from `Tools_AI-MCP` starter-pack (`opencode.json` + 7 agents + 8 commands 
 
 ## ✨ What it does
 
-**1:1 Obsidian subsystems (12) — reference `src/main.ts:15` / `esbuild.config.mjs:10`:**
+**1:1 Obsidian subsystems (12) — all milestones M1-M10 complete:**
 
-| # | Obsidian | Lythic Python (`lythic/`) | Status |
-|---|----------|---------------------------|--------|
-| 1 | **Vault** — folder of `.md` + `vault/.obsidian/*.json` (`Vault.getFiles`/`metadataCache`) | `domain/vault.py:Vault` + `watchdog>=4.0` + `QTimer 200ms` | ✅ `vault/Welcome to Lythic.md` |
-| 2 | **OFM Markdown** — `---YAML---`, `[[wiki]]` `[[a#heading\|alias]]` `![[embed]]`, `#tag/#nested`, `> [!NOTE]` callouts, `- [ ]` tasks, `$$` math (`@codemirror/@lezer`) | `infrastructure/markdown_parser.py:ObsidianMarkdownParser` = `markdown-it-py>=3.0` + `mdit-py-plugins` + `python-frontmatter` + `ObsidianWikiLinkPlugin` regex | ✅ snapshots |
-| 3 | **Links** — outgoing / backlinks / unlinked mentions (`metadataCache`) | `domain/vault.py:WikiLink` + `sqlite_repo.py:links` | ✅ |
-| 4 | **Explorer** — tree rename/move/delete + FSEvents | `presentation/VaultTree.py:QTreeView+QFileSystemModel` | ✅ |
-| 5 | **Editor** — Live Preview vs Source, folding (`MarkdownView/Editor`) | `presentation/EditorPane.py:QPlainTextEdit+QSyntaxHighlighter` + `PreviewPane.py:QWebEngineView` sync | ✅ stub |
-| 6 | **Search** — Quick Switcher `Cmd+O`, global regex, tag | `sqlite_repo.py:fts_notes` `FTS5 porter unicode61` | ✅ `VaultService.search` |
-| 7 | **Graph** — force global/local 2-hop, filter/group/color by tag | `presentation/GraphView.py:QWebEngine+Cytoscape.js` + `domain/vault.py:VaultGraph.to_cytoscape_json/ego_graph` + `networkx` layout (sigma.js at 10k) | ✅ |
-| 8 | **Properties** — frontmatter table | `Note.frontmatter: dict` + `SettingsDialog` | ✅ |
-| 9 | **Command palette** — `addCommand()+hotkeys` (`src/main.ts:24`) | `QShortcut(QKeySequence)` + `QSettings` | 🔜 |
-| 10 | **Settings** — `loadData/saveData→data.json` (`src/settings.ts:1`) | `presentation/SettingsDialog.py:SettingsManager` = `QSettings` global + `vault/.lythic/config.json` | ✅ |
-| 11 | **Plugin API** — `Plugin:onload:17/onunload:41` | kept as shim; Python app is independent | ✅ |
-| 12 | **Sync** — Obsidian Sync / `obsidian-git` (`git status --porcelain`, `pull --rebase`) | `infrastructure/git_service.py:SubprocessGitAdapter(QProcess)` + `Dulwich>=0.22` fallback + `keyring` + `pathspec` | ✅ |
+| # | Obsidian | Lythic Python (`lythic/`) | Milestone | Status |
+|---|----------|---------------------------|-----------|--------|
+| 1 | **Vault** — folder of `.md` + `vault/.obsidian/*.json` | `domain/vault.py:Vault` + `watchdog>=4.0` + `QTimer 200ms` | M1 | ✅ |
+| 2 | **OFM Markdown** — `---YAML---`, `[[wiki]]` `[[a#heading\|alias]]` `![[embed]]`, `#tag/#nested`, `> [!NOTE]` callouts | `infrastructure/markdown_parser.py:ObsidianMarkdownParser` = `markdown-it-py` + `python-frontmatter` | M1 | ✅ |
+| 3 | **Links** — outgoing / backlinks / unlinked mentions | `domain/vault.py:WikiLink` + `sqlite_repo.py:links` FTS5 | M1 | ✅ |
+| 4 | **Explorer** — tree rename/move/delete + FSEvents | `presentation/VaultTree.py:QTreeView+QFileSystemModel` | M1 | ✅ |
+| 5 | **Editor** — QTextEdit + EditingToolbar 40+ cmds + CodeBlockHighlighter (Pygments) | `EditorPane.py:QTextEdit` + `EditingToolbar.py:QToolBar` + `CodeBlockHighlighter.py:QSyntaxHighlighter` | M5 | ✅ |
+| 6 | **Search** — Quick Switcher, global regex, tag | `sqlite_repo.py:fts_notes` `FTS5 porter unicode61` | M1 | ✅ |
+| 7 | **Graph** — force global/local 2-hop, filter/group/color by tag, Cytoscape.js + sigma.js WebGL at 10k | `GraphView.py:QWebEngine+Cytoscape.js` + `graph_channel.py:QThread LayoutWorker` + `networkx.spring_layout` | M2-M3 | ✅ |
+| 8 | **Properties** — frontmatter table | `Note.frontmatter: dict` + `SettingsDialog` | M1 | ✅ |
+| 9 | **Media** — image drag→vault + video poster | `MediaEmbed.py:QPixmap+QMediaPlayer` | M7 | ✅ |
+| 10 | **Spreadsheet** — QTextTable + openpyxl | `SheetView.py:QTextTable+QStandardItemModel` | M7 | ✅ |
+| 11 | **Settings** — QSettings + vault config + live theme preview | `SettingsDialog.py:SettingsManager` + `ThemeService` TOML→CSS + 4 themes (default/dracula/glassmorphism/tokyo-night) | M1+M9 | ✅ |
+| 12 | **Sync** — `git status --porcelain`, `pull --rebase` | `SubprocessGitAdapter` + `DulwichGitAdapter` + `GitAutoSync QTimer 30s` + `keyring` + `pathspec` | M8 | ✅ |
+| 13 | **Math/LaTeX** — `$$` KaTeX rendering | `latex_renderer.py:render_with_fallback` CDN+bundle | M6 | ✅ |
+| 14 | **AI** — clean/style/summarize/fix-frontmatter | `ai_service.py:AIService` metis api.metisai.ir + offline heuristics | M10 | ✅ |
+| 15 | **Design System** — hyper glassmorphism (css.glass 451★ + Hype4 + liquidGL) | `glass.css` + `tokens.css` 100+ vars + `components.css` + QSS Fusion native shell + `qss_builder.py` | M1+M9 | ✅ |
 
 **Demo (headless, no display needed):**
 ```bash
-uv run python -m lythic.presentation.main vault
+python3 -m lythic.presentation.main --headless vault
 # Lythic vault: vault (Qt: none)
-# Indexed 1 notes → vault/.lythic/cache.db
-# Graph: 1 nodes, 0 edges
-# Search 'Lythic': ['vault/Welcome to Lythic.md']
+# Indexed 2 notes → vault/.lythic/cache.db
+# Graph: 4 nodes, 4 edges
+# Search 'Lythic': ['vault/Demo Note.md', 'vault/Welcome to Lythic.md']
+```
+
+**Demo (GUI — 4-pane split, Dracula theme):**
+```bash
+python3 -m lythic.presentation.main vault
+# Opens QMainWindow: VaultTree | Editor | Preview (glass) | Graph (Cytoscape.js)
+# Status bar: 4n 4e 3 clusters cytoscape git:main Qt:PySide6
 ```
 
 ---
@@ -81,79 +99,126 @@ graph TD
 
 ---
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 Lythic/                               # repo root (Obsidian plugin + Python clone)
-├── manifest.json                    # plugin id:lythic v0.1.0 minAppVersion 1.5.0
+├── manifest.json                    # plugin id:lythic v0.1.0
 ├── package.json                     # npm: dev/build/lint/typecheck/test
 ├── src/
-│   ├── main.ts:15                   # LythicPlugin (ribbon brain:20, cmds lythic-open-graph:24/index-vault:30, GraphModal:63, SettingTab:80)
-│   └── settings.ts:1               # LythicSettings interface
+│   ├── main.ts                      # LythicPlugin (Obsidian ribbon + commands)
+│   └── settings.ts                  # LythicSettings interface
 ├── vault/
-│   ├── Welcome to Lythic.md         # entry note
-│   ├── .obsidian/                   # workspace.json/hotkeys.json gitignored
-│   └── .lythic/cache.db             # sqlite WAL gitignored (generated)
-├── lythic/                          # Python clone (PySide6)
-│   ├── domain/vault.py              # Vault, Note, WikiLink, Tag, VaultGraph (ego_graph 2-hop, Cytoscape JSON)
-│   ├── application/vault_service.py # VaultService (index_all, search, build_graph)
+│   ├── Welcome to Lythic.md         # entry note (wikilinks demo)
+│   ├── Demo Note.md                 # frontmatter + tags + callout demo
+│   ├── .obsidian/                   # workspace.json (gitignored)
+│   └── .lythic/cache.db             # sqlite WAL (generated, gitignored)
+├── lythic/                          # Python clone (PySide6 LGPL)
+│   ├── domain/
+│   │   ├── vault.py                 # Vault, Note, WikiLink, Tag, VaultGraph (ego_graph, Cytoscape JSON)
+│   │   └── graph_clustering.py      # Louvain communities + compound nodes
+│   ├── application/
+│   │   ├── vault_service.py         # VaultService facade (index, search, graph)
+│   │   └── ai_service.py            # AIService (metis api.metisai.ir + offline heuristics)
 │   ├── infrastructure/
 │   │   ├── markdown_parser.py       # ObsidianMarkdownParser (OFM wikilinks/tags/callouts)
-│   │   ├── sqlite_repo.py           # SqliteVaultRepo (migrations user_version)
-│   │   ├── watcher.py               # VaultIndexer + watchdog + is_ignored (.git/.obsidian)
-│   │   └── git_service.py           # SubprocessGitAdapter + Dulwich fallback + pathspec
+│   │   ├── sqlite_repo.py           # SqliteVaultRepo (WAL + FTS5 + JSON1 + user_version)
+│   │   ├── watcher.py               # VaultIndexer + watchdog + QTimer 200ms debounce
+│   │   ├── git_service.py           # SubprocessGit + Dulwich fallback + GitAutoSync QTimer 30s
+│   │   ├── theme_service.py         # ThemeService (TOML → CSS vars, 4 themes)
+│   │   ├── qss_builder.py           # QSS Fusion dark glass (native Qt widgets)
+│   │   ├── latex_renderer.py        # KaTeX rendering (CDN + local bundle)
+│   │   └── resources.py             # Asset path resolution + baseUrl for QWebEngine
 │   └── presentation/
 │       ├── qt_compat.py             # PySide6→PyQt6→dummy shim (MIT-safe)
-│       ├── MainWindow.py            # QMainWindow splitter controller
-│       ├── VaultTree.py             # QTreeView file explorer
-│       ├── EditorPane.py            # QPlainTextEdit editor
-│       ├── PreviewPane.py           # QWebEngine preview
-│       ├── GraphView.py             # QWebEngine Cytoscape graph
-│       ├── SettingsDialog.py        # QSettings + vault/.lythic/config.json
-│       └── main.py                  # CLI entry lythic
+│       ├── MainWindow.py            # QMainWindow controller (splitter)
+│       ├── app.py                   # QApplication full 4-pane setup
+│       ├── VaultTree.py             # QTreeView + QFileSystemModel (*.md filter)
+│       ├── EditorPane.py            # QTextEdit (not QPlainTextEdit) + undo/redo
+│       ├── EditingToolbar.py        # Word-like 40+ formatting commands
+│       ├── CodeBlockHighlighter.py  # Pygments + QSyntaxHighlighter
+│       ├── PreviewPane.py           # QWebEngineView markdown-it HTML + glass CSS
+│       ├── GraphView.py             # QWebEngineView Cytoscape.js + QWebChannel
+│       ├── graph_channel.py         # QThread LayoutWorker + sigma.js switch at 10k
+│       ├── ThemedWebView.py         # Glass CSS wrapper for QWebEngineView
+│       ├── MediaEmbed.py            # QPixmap + QMediaPlayer video + drag→vault
+│       ├── SheetView.py             # QTextTable tier1 + openpyxl tier2
+│       ├── SettingsDialog.py        # QSettings + vault config + live theme preview
+│       ├── bridge/ThemeBridge.py    # QWebChannel JS↔Python bridge
+│       └── main.py                  # CLI entry point
+├── assets/
+│   ├── themes/                      # TOML theme definitions
+│   │   ├── default.toml             # Lythic Default (Slate dark)
+│   │   ├── dracula.toml             # Dracula (Purple accent)
+│   │   ├── glassmorphism.toml       # Hyper Glass (liquidGL)
+│   │   └── tokyo-night.toml         # Tokyo Night (Blue accent)
+│   └── web/                         # Design system (HTML/CSS/JS)
+│       ├── css/
+│       │   ├── tokens.css           # 100+ CSS vars (colors, spacing, motion, glass)
+│       │   ├── glass.css            # Hyper-realistic glass (css.glass 451★ recipe)
+│       │   ├── components.css       # Layout + shell + toolbar + buttons
+│       │   └── themes/              # Per-theme CSS overrides
+│       ├── js/
+│       │   ├── theme-manager.js     # LythicTheme.applyTheme() JS API
+│       │   └── liquid-hero.js       # WebGL liquid hero (833★ liquidGL)
+│       └── vendor/
+│           └── cytoscape.min.js     # Vendored Cytoscape.js 3.26
 ├── tests/
-│   ├── unit/test_wikilink_parser.py # OFM tag/wiki/callout/frontmatter (8 tests)
-│   ├── unit/test_indexer.py         # FTS5, backlinks, migrations
-│   ├── unit/test_graph_builder.py   # Cytoscape JSON + ego_graph
-│   ├── unit/test_git_service.py     # status --porcelain mock
-│   ├── unit/test_qt_compat.py       # binding shim
-│   ├── unit/test_vault_domain.py    # value objects
-│   ├── integration/test_watcher.py  # tmp_path watcher
-│   ├── integration/test_vault_repo.py # e2e index+graph
-│   └── fixtures/obsidian/{callout,wikilinks}.md
-├── tools/build.spec                 # PyInstaller 120MB spec
-├── docs/adr/ADR-001-lythic-python-clone.md
-├── pyproject.toml                   # requires-python>=3.11,<3.13 (dev 3.12 via uv), ruff 100, mypy strict, pytest-cov 80%
-├── .opencode/                       # 7 agents (architect read-only, test-engineer test-only, etc.), 8 commands, 8 rules, 5 skills
-├── opencode.json:3                  # provider metis api.metisai.ir + 15 MCP + superpowers@6.3.0
-├── AGENTS.md:31                     # layered + DI + no cycles
-└── guardrails.md:5                  # lint→typecheck→test 80%→security gate
+│   ├── unit/
+│   │   ├── test_wikilink_parser.py  # OFM wiki/tag/callout/frontmatter (8 tests)
+│   │   ├── test_indexer.py          # FTS5, backlinks, migrations
+│   │   ├── test_graph_builder.py    # Cytoscape JSON + ego_graph + positions
+│   │   ├── test_git_service.py      # status --porcelain mock
+│   │   ├── test_qt_compat.py        # binding shim
+│   │   ├── test_vault_domain.py     # value objects
+│   │   └── test_new_milestones.py   # M1-M10 themes/graph/clustering/ai/git/latex
+│   ├── integration/
+│   │   ├── test_watcher.py          # tmp_path watchdog observer
+│   │   └── test_vault_repo.py       # e2e index+graph
+│   └── fixtures/obsidian/
+│       ├── callout.md               # > [!NOTE] fixture
+│       └── wikilinks.md             # [[wiki]] fixture
+├── docs/
+│   ├── screenshots/                 # App screenshots (PNG)
+│   │   ├── lythic-main.png          # 4-pane app (Dracula theme)
+│   │   ├── lythic-graph.png         # Knowledge graph (Cytoscape.js)
+│   │   └── lythic-preview.md        # Preview pane (glass design)
+│   └── adr/ADR-001-lythic-python-clone.md
+├── pyproject.toml                   # requires-python>=3.11,<3.13, ruff, mypy strict, pytest-cov 80%
+├── AGENTS.md                        # layered + DI + no cycles
+├── guardrails.md                    # lint→typecheck→test 80%→security gate
+├── opencode.json                    # provider metis api.metisai.ir + 15 MCP
+└── tools/
+    ├── build.spec                   # PyInstaller 120MB spec
+    ├── run_app.py                   # App launcher for screenshots
+    └── screenshot.py                # Screenshot helper
 ```
 
 ---
 
-## 🚀 Setup
+## Setup
 
 ### Python clone (recommended)
 
 ```bash
-# 1) Python 3.11+ (dev 3.12 via uv)
-uv python pin 3.12
-uv venv && source .venv/bin/activate
+# 1) Python 3.11+
+python3 --version  # >= 3.11
 
 # 2) Install
-uv pip install -e ".[dev]"              # or: pip install -e ".[dev]"
+pip install -e ".[dev]"
 # deps: PySide6>=6.7, markdown-it-py, mdit-py-plugins, python-frontmatter,
-#       watchdog, dulwich, keyring, pathspec, networkx, structlog
+#       watchdog, dulwich, keyring, pathspec, networkx, structlog,
+#       Pygments, openpyxl, tomli
 
 # 3) Run vault (headless demo works without display)
-uv run lythic vault                     # or: python -m lythic.presentation.main vault
-uv run lythic /path/to/your/vault       # any folder of *.md
+python3 -m lythic.presentation.main --headless vault
+python3 -m lythic.presentation.main vault           # GUI mode (4-pane)
+python3 -m lythic.presentation.main /path/to/vault  # any folder of *.md
 
-# 4) Quality gate (do before commit — guardrails.md:5)
+# 4) Quality gate (before commit)
 ruff check lythic tests && ruff format --check lythic tests
-mypy lythic --strict                    # ✅ 19 files
-pytest --cov=lythic --cov-fail-under=80 -q  # ✅ 30 passed, 84.13%
+mypy lythic --strict
+pytest --cov=lythic --cov-fail-under=80 -q
 ```
 
 ### Obsidian plugin (legacy)
@@ -289,14 +354,14 @@ open dist/Lythic/Lythic.app  # or: dist/Lythic/Lythic --vault vault
 
 ---
 
-## 🧪 Testing (TDD 70/20/10, 80% min, 95% indexer — `testing.md`)
+## Testing (TDD 70/20/10, 80% min, 95% indexer)
 
 ```bash
-pytest                               # 30 tests
-pytest --cov=lythic --cov-fail-under=80 -q   # 84.13% (presentation omitted, domain 98%)
+pytest                               # 45 tests (all passing)
+pytest --cov=lythic --cov-fail-under=80 -q   # coverage 80%+ (presentation excluded)
 pytest -k test_wikilink_parser -v    # unit 70%
 pytest tests/integration -v          # 20% real watchdog/sqlite tmp_path
-# e2e 10%: MainWindow index+graph+git (headless, pytest-qt when display)
+pytest tests/unit/test_new_milestones.py -v  # M1-M10 milestone tests
 ```
 
 - `tests/fixtures/obsidian/{callout,wikilinks}.md` OFM fixtures, `syrupy` snapshots.
@@ -373,14 +438,22 @@ git push -u origin feat/lythic-m2-parser-index && gh pr create --fill --base mai
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
-- **m2** done: `VaultGraph` `ego_graph` + `sqlite_repo` `fts_notes` + `watcher` + `git_service` + `presentation` stubs, PR #1 merged `a8916e1→14f3a45`.
-- **m3** watcher: `watchdog` FSEvents coalesce 200ms unit + integration (`tmp_path`, `PollingObserver` fallback).
-- **m4** editor: `EditorPane` live `QSyntaxHighlighter` (wiki/tag/callout) + `PreviewPane` split sync via `cursorPositionChanged`.
-- **m5** graph: `Cytoscape.js` `QWebChannel` `filter/group/color by tag`, `Quick Switcher Cmd+O` fuzzy + tag search.
-- **m6** git: `QTimer 30s` autosync UI (toast on conflict, `stash pop` fail → `rebase --abort`), `keyring` PAT flow + `ssh-agent`.
-- **m7** settings: `SettingsDialog QFormLayout` + `QSS` dark/light + `tools/build.spec` + `create-dmg` notarize; `/finish-work` 80%+ (presentation now covered via `pytest-qt`).
+**All milestones M1-M10 complete and pushed to `main`:**
+
+| Milestone | Features | Commit |
+|-----------|----------|--------|
+| **M1** Scaffold | ADR-001, domain, parser, sqlite, watcher, git service, presentation stubs, 30 tests | `a8916e1` |
+| **M2** Graph | Local Cytoscape.js bundle, QWebChannel bridge, ThemedWebView, 4-pane splitter | `88a41a7` |
+| **M3** Large Graph | QThread LayoutWorker, sigma.js switch at 10k, spring_layout | `d38238c` |
+| **M4** Clustering | Louvain communities, compound nodes, cluster color palette | `d38238c` |
+| **M5** Editor | QTextEdit, EditingToolbar 40+ cmds, CodeBlockHighlighter (Pygments) | `d38238c` |
+| **M6** Code/Math | Pygments syntax highlighting, KaTeX math rendering (CDN + bundle) | `d38238c` |
+| **M7** Media/Sheet | MediaEmbed (QPixmap+QMediaPlayer), SheetView (QTextTable+openpyxl) | `d38238c` |
+| **M8** Git Sync | GitAutoSync QTimer 30s, keyring, pathspec guard, Dulwich fallback | `d38238c` |
+| **M9** Design System | glass.css (css.glass 451★), tokens.css (100+ vars), components.css, liquidGL, QSS Fusion | `b4ac270` |
+| **M10** AI | AIService (metis api.metisai.ir), offline heuristics (clean/style/summarize/fix-frontmatter) | `d38238c` |
 
 After MVP: `ADR-002` `sentence-transformers` local embeddings → `sqlite-vec` + `annoy` link inference clusters/temporal.
 

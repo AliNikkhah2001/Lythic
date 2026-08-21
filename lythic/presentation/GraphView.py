@@ -32,12 +32,12 @@ class GraphView:
         """Export Cytoscape HTML for QWebEngineView."""
         data_json = json.dumps(self.cytoscape_json or {"nodes": [], "edges": []})
         html = (
-            '<!doctype html><html><head>'
+            "<!doctype html><html><head>"
             '<script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>'
             '</head><body><div id="cy" style="width:100%;height:100vh"></div>'
-            f'<script>var data={data_json};var cy=cytoscape({{'
+            f"<script>var data={data_json};var cy=cytoscape({{"
             'container:document.getElementById("cy"),'
-            'elements:[...data.nodes,...data.edges],'
+            "elements:[...data.nodes,...data.edges],"
             'style:[{selector:"node",style:{"label":"data(label)"}},'
             '{selector:"edge",style:{"width":2}}],'
             'layout:{name:"cose"}}});</script></body></html>'

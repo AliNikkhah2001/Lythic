@@ -116,13 +116,59 @@ class VaultGraph:
     edges: tuple[GraphEdge, ...]
 
     def to_cytoscape_json(self) -> dict[str, object]:
-        """Shape expected by QWebChannel → Cytoscape.js."""
+        """Shape expected by QWebChannel → Cytoscape.js (deduped edges)."""
+        seen: set[tuple[str, str]] = set()
+        deduped: list[GraphEdge] = []
+        for edge in self.edges:
+            key = (edge.source, edge.target)
+            if key not in seen:
+                seen.add(key)
+                deduped.append(edge)
         return {
             "nodes": [
                 {"data": {"id": n.node_id, "label": n.label, "group": n.group}} for n in self.nodes
             ],
-            "edges": [{"data": {"source": e.source, "target": e.target}} for e in self.edges],
+            "edges": [{"data": {"source": e.source, "target": e.target}} for e in deduped],
         }
+
+    def to_cytoscape_with_positions(self) -> dict[str, object]:
+        """Cytoscape JSON with networkx.spring_layout positions (QThread-ready)."""
+        base = self.to_cytoscape_json()
+        if not self.nodes:
+            return base
+        try:
+            import networkx as nx
+
+            graph = nx.DiGraph()
+            for node in self.nodes:
+                graph.add_node(node.node_id)
+            for edge in self.edges:
+                graph.add_edge(edge.source, edge.target)
+            # spring_layout gives {node: [x,y]} in [-1,1]; scale to 800x600
+            positions = nx.spring_layout(graph, seed=42, scale=400)
+        except Exception:
+            # fallback without numpy/scipy: deterministic circular layout
+            positions = {}
+            count = len(self.nodes)
+            import math
+
+            for idx, node in enumerate(self.nodes):
+                angle = 2 * math.pi * idx / max(count, 1)
+                positions[node.node_id] = [400 * math.cos(angle), 300 * math.sin(angle)]
+        nodes_raw = base["nodes"]
+        assert isinstance(nodes_raw, list)
+        nodes_with_pos: list[dict[str, object]] = []
+        for entry in nodes_raw:
+            assert isinstance(entry, dict)
+            data = entry.get("data")
+            assert isinstance(data, dict)
+            node_id = data.get("id")
+            assert isinstance(node_id, str)
+            pos = positions.get(node_id)
+            if pos is not None:
+                entry["position"] = {"x": float(pos[0]) + 400, "y": float(pos[1]) + 300}
+            nodes_with_pos.append(entry)
+        return {"nodes": nodes_with_pos, "edges": base["edges"]}
 
     def ego_graph(self, center: str, depth: int = 2) -> VaultGraph:
         """2-hop local graph around center (BFS). Depth 1-3."""

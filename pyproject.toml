@@ -77,7 +77,7 @@ show_error_codes = true
 exclude = ["build", "dist", ".venv"]
 
 [[tool.mypy.overrides]]
-module = ["networkx.*", "frontmatter.*", "watchdog.*", "keyring.*", "pathspec.*", "PySide6.*", "PyQt6.*"]
+module = ["networkx.*", "frontmatter.*", "watchdog.*", "pathspec.*", "PySide6.*", "PyQt6.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

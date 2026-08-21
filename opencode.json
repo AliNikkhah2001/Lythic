@@ -1,6 +1,13 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "provider": {
+    "opencode": {
+      "name": "opencode-zen",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://opencode.ai/zen/v1"
+      }
+    },
     "metis": {
       "name": "metis",
       "npm": "@ai-sdk/openai-compatible",
@@ -10,6 +17,7 @@
       "apiKey": "tpsg-HT0wZnLjl7TXfnvF5vBIGjJ2zJc6KGi"
     }
   },
+  "model": "opencode/muse-spark-1.2-contributor-free",
   "mcp": {
     "servers": {
       "enabled": true,
@@ -89,25 +97,39 @@
   },
   "agent": {
     "review": {
-      "description": "Code review specialist - correctness, design, readability, security, performance"
+      "description": "Code review specialist - correctness, design, readability, security, performance",
+      "model": "opencode/muse-spark-1.2-contributor-free",
+      "temperature": 0.1
     },
     "architect": {
-      "description": "System design & architecture - ADRs, diagrams, trade-offs, migrations"
+      "description": "System design & architecture - ADRs, diagrams, trade-offs, migrations",
+      "model": "opencode/muse-spark-1.2-contributor-free",
+      "temperature": 0.2
     },
     "security-auditor": {
-      "description": "Security vulnerability detection - OWASP, CWE, STRIDE, crypto, auth"
+      "description": "Security vulnerability detection - OWASP, CWE, STRIDE, crypto, auth",
+      "model": "opencode/muse-spark-1.2-contributor-free",
+      "temperature": 0.1
     },
     "test-engineer": {
-      "description": "TDD test author - writes tests first, verifies RED, targets 80%+ coverage"
+      "description": "TDD test author - writes tests first, verifies RED, targets 80%+ coverage",
+      "model": "opencode/muse-spark-1.2-contributor-free",
+      "temperature": 0.1
     },
     "backend-specialist": {
-      "description": "Backend development - API, database, caching, distributed systems patterns"
+      "description": "Backend development - API, database, caching, distributed systems patterns",
+      "model": "opencode/muse-spark-1.2-contributor-free",
+      "temperature": 0.1
     },
     "frontend-specialist": {
-      "description": "Frontend development - React, TypeScript, UI/UX, accessibility, animations"
+      "description": "Frontend development - React, TypeScript, UI/UX, accessibility, animations",
+      "model": "opencode/muse-spark-1.2-contributor-free",
+      "temperature": 0.2
     },
     "ml-engineer": {
-      "description": "ML engineering - PyTorch, training loops, GPU optimization, model deployment"
+      "description": "ML engineering - PyTorch, training loops, GPU optimization, model deployment",
+      "model": "opencode/muse-spark-1.2-contributor-free",
+      "temperature": 0.2
     }
   },
   "instructions": [

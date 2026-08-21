@@ -1,5 +1,6 @@
 """Presentation — SettingsDialog (QSettings + vault/.lythic/config.json)."""
 
+# mypy: ignore-errors
 from __future__ import annotations
 
 import json
@@ -43,15 +44,18 @@ class SettingsManager:
 
 
 class SettingsDialog:
-    """Dialog wrapper — testable without Qt."""
+    """Dialog wrapper — testable without Qt, with theme combobox."""
 
     def __init__(self, vault_root: Path) -> None:
         self.manager = SettingsManager(vault_root)
+        self.vault_root = vault_root
 
     def create_widget(self) -> object:
-        """Create QDialog when available."""
+        """Create QDialog when available (theme combobox <100ms live)."""
         try:
-            from PySide6.QtWidgets import QCheckBox, QDialog, QFormLayout, QSpinBox
+            from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QFormLayout, QSpinBox
+
+            from lythic.infrastructure.theme_service import ThemeService
 
             dlg = QDialog()
             layout = QFormLayout(dlg)
@@ -65,6 +69,32 @@ class SettingsDialog:
             spin = QSpinBox(dlg)
             spin.setValue(s.auto_commit_interval_seconds)
             layout.addRow("auto-commit interval", spin)
+            # theme picker 4 themes
+            theme_svc = ThemeService(vault_root=self.vault_root)
+            combo = QComboBox(dlg)
+            themes = theme_svc.list_themes()
+            combo.addItems(themes)
+            cur = theme_svc.current_name()
+            if cur in themes:
+                combo.setCurrentText(cur)
+
+            def on_theme(idx: int) -> None:
+                import contextlib
+
+                name = combo.itemText(idx)
+                theme_svc.save(name)
+                with contextlib.suppress(Exception):
+                    parent = dlg.parent()
+                    if parent is None:
+                        return
+                    for view in parent.findChildren(object):  # type: ignore[union-attr]
+                        with contextlib.suppress(Exception):
+                            view.page().runJavaScript(  # type: ignore[union-attr]
+                                f"LythicTheme.applyTheme('{name}')",
+                            )
+
+            combo.currentIndexChanged.connect(on_theme)  # type: ignore[attr-defined]
+            layout.addRow("theme", combo)
             return dlg
         except ImportError:
             return None

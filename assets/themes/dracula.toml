@@ -1,0 +1,23 @@
+[theme]
+name = "dracula"
+display = "Dracula"
+
+[colors]
+bg = "#282a36"
+surface = "#44475a"
+text = "#f8f8f2"
+accent = "#bd93f9"
+border = "rgba(189,147,249,0.25)"
+glass_bg = "rgba(68,71,90,0.60)"
+muted = "#6272a4"
+
+[glass]
+blur = "18px"
+saturate = "170%"
+radius = "12px"
+shadow = "0 8px 32px rgba(0,0,0,0.30)"
+
+[fonts]
+sans = "system-ui, sans-serif"
+mono = "Fira Code, monospace"
+size = "14px"

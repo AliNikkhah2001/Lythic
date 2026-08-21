@@ -55,7 +55,6 @@ def run_app(vault_root: Path) -> int:
     win = QMainWindow()
     win.setWindowTitle(f"Lythic — {vault_root} — {len(graph.nodes)} notes")
     win.resize(1400, 900)
-
     splitter = QSplitter(Qt.Horizontal)
 
     # Left: vault tree
@@ -101,16 +100,43 @@ def run_app(vault_root: Path) -> int:
 
     win.setCentralWidget(splitter)
 
-    # Status bar: search + git
-    from lythic.infrastructure.git_service import create_git_service
+    # Attach EditingToolbar to QMainWindow (M5)
+    try:
+        from lythic.presentation.EditingToolbar import EditingToolbar
+
+        toolbar = EditingToolbar(editor_widget).widget()  # type: ignore[no-untyped-call]
+        if toolbar is not None:
+            win.addToolBar(toolbar)
+    except Exception:
+        pass
+
+    # Status bar: git + clusters (M4) + sigma switch (M3)
+    from lythic.domain.graph_clustering import cluster_graph
+    from lythic.infrastructure.git_service import GitAutoSync, create_git_service
+    from lythic.presentation.graph_channel import GraphChannel
 
     git = create_git_service(Path.cwd())
     st = git.status()
+    clusters = cluster_graph(graph)
+    channel = GraphChannel()
+    renderer = channel.choose_renderer(len(graph.nodes))
     status_msg = (
-        f"Indexed {len(graph.nodes)} nodes | {len(graph.edges)} links | "
-        f"git:{st.branch or '—'}{' dirty' if st.is_dirty else ''} | Qt:{binding}"
+        f"Idx {len(graph.nodes)}n {len(graph.edges)}e "
+        f"cl:{len(clusters)} {renderer} git:{st.branch or '—'}"
+        f"{' dirty' if st.is_dirty else ''} Qt:{binding}"
     )
     win.statusBar().showMessage(status_msg)
+
+    try:
+        from lythic.infrastructure.theme_service import ThemeService
+
+        theme_svc = ThemeService(vault_root=vault_root)
+        win.setProperty("theme", theme_svc.current_name())
+        autosync = GitAutoSync(vault_root, interval_ms=30000)
+        autosync.start()
+        app.aboutToQuit.connect(lambda: autosync.stop())
+    except Exception:
+        pass
 
     # Watchdog + QTimer 200ms debounce (fixes watcher.py:102 never started)
     try:

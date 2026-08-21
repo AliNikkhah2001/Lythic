@@ -1,0 +1,23 @@
+[theme]
+name = "default"
+display = "Lythic Default"
+
+[colors]
+bg = "#0f172a"
+surface = "#1e293b"
+text = "#e2e8f0"
+accent = "#38bdf8"
+border = "rgba(255,255,255,0.18)"
+glass_bg = "rgba(255,255,255,0.10)"
+muted = "#94a3b8"
+
+[glass]
+blur = "16px"
+saturate = "180%"
+radius = "12px"
+shadow = "0 8px 32px rgba(0,0,0,0.10)"
+
+[fonts]
+sans = "system-ui, -apple-system, sans-serif"
+mono = "JetBrains Mono, monospace"
+size = "14px"

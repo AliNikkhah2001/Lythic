@@ -1,0 +1,23 @@
+[theme]
+name = "tokyo-night"
+display = "Tokyo Night"
+
+[colors]
+bg = "#1a1b26"
+surface = "#24283b"
+text = "#c0caf5"
+accent = "#7aa2f7"
+border = "rgba(122,162,247,0.25)"
+glass_bg = "rgba(36,40,59,0.65)"
+muted = "#565f89"
+
+[glass]
+blur = "14px"
+saturate = "160%"
+radius = "14px"
+shadow = "0 8px 32px rgba(0,0,0,0.25)"
+
+[fonts]
+sans = "Inter, system-ui, sans-serif"
+mono = "JetBrains Mono, monospace"
+size = "14px"

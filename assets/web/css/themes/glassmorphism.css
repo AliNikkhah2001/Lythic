@@ -1,0 +1,15 @@
+[data-theme="glassmorphism"]{
+  --bg:#0f172a;
+  --surface:rgba(255,255,255,0.06);
+  --text:#f1f5f9;
+  --accent:#38bdf8;
+  --border:rgba(255,255,255,0.25);
+  --glass-bg:rgba(255,255,255,0.14);
+  --muted:#cbd5e1;
+  --blur:20px;
+  --saturate:200%;
+  --radius:24px;
+  --shadow:0 8px 32px rgba(0,0,0,0.15), inset 0 1px rgba(255,255,255,0.5);
+  --font-sans:system-ui, sans-serif;
+  --font-mono:JetBrains Mono, monospace;
+}

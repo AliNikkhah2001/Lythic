@@ -119,6 +119,74 @@ class DulwichGitAdapter:
         return False
 
 
+def _is_safe_path(candidate: Path, vault_root: Path) -> bool:
+    """Guard vault/.lythic/config.json path traversal."""
+    try:
+        return candidate.resolve().is_relative_to(vault_root.resolve())
+    except ValueError:
+        return False
+
+
+class GitAutoSync:
+    """QTimer 30s autosync + QProcess (fallback subprocess)."""
+
+    def __init__(self, vault_root: Path, interval_ms: int = 30000) -> None:
+        self.vault_root = vault_root
+        self.interval_ms = interval_ms
+        self._timer: object | None = None
+        self._service = create_git_service(vault_root)
+
+    def start(self) -> None:
+        """Start 30s QTimer autosync (requires QApplication)."""
+        try:
+            from PySide6.QtCore import QTimer
+
+            timer = QTimer()
+            timer.setInterval(self.interval_ms)
+            timer.timeout.connect(self.tick)
+            timer.start()
+            self._timer = timer
+        except Exception:
+            pass
+
+    def tick(self) -> bool:
+        """Single autosync tick: commit if dirty then sync."""
+        try:
+            if self._service.status().is_dirty:
+                self._service.auto_commit()
+            return self._service.sync()
+        except Exception:
+            return False
+
+    def stop(self) -> None:
+        """Stop timer."""
+        try:
+            if self._timer is not None:
+                self._timer.stop()  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
+
+def store_git_token(service: str, token: str) -> None:
+    """Store git token via keyring (secrets via env/keyring only)."""
+    try:
+        import keyring
+
+        keyring.set_password(f"lythic-{service}", "git", token)
+    except Exception:
+        pass
+
+
+def load_git_token(service: str) -> str | None:
+    """Load token from keyring."""
+    try:
+        import keyring
+
+        return keyring.get_password(f"lythic-{service}", "git")
+    except Exception:
+        return None
+
+
 def create_git_service(vault_root: Path) -> GitService:
     """Factory — subprocess if git available else dulwich."""
     if shutil.which("git") is not None:

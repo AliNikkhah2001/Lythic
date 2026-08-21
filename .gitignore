@@ -52,6 +52,11 @@ logs/
 *.temp
 cache/
 
+# Lythic Python clone — index cache (gitignored per ADR-001)
+vault/.lythic/
+.lythic/
+cache.db
+
 # Secrets (never commit)
 *.pem
 *.key

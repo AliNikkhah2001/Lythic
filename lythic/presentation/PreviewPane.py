@@ -26,23 +26,39 @@ class PreviewPane:
         return path.read_text(encoding="utf-8") if path.exists() else ""
 
     def wrap_document(self, body_html: str) -> str:
-        """Wrap rendered markdown in full glass document (tokens+glass+components)."""
+        """Wrap rendered markdown in full glass document (tokens+glass+components + liquidGL)."""
         tokens_css = self._read_asset("css/tokens.css")
         theme_css = self._read_asset(f"css/themes/{self.theme}.css")
         glass_css = self._read_asset("css/glass.css")
         components_css = self._read_asset("css/components.css")
         theme_js = self._read_asset("js/theme-manager.js")
+        liquid_js = self._read_asset("js/liquid-hero.js")
+        # Python-bridged liquid glass: canvas hero behind preview, JS ↔ ThemeBridge via QWebChannel
         return (
             "<!doctype html><html><head><meta charset='utf-8'>"
+            '<meta name="viewport" content="width=device-width, initial-scale=1">'
             f"<style>{tokens_css}</style>"
             f"<style>{theme_css}</style>"
             f"<style>{glass_css}</style>"
             f"<style>{components_css}</style>"
             "<style>.preview-body{max-width:760px;margin:0 auto;"
-            "padding:var(--spacing-lg,24px)}</style>"
+            "padding:var(--spacing-lg,24px);position:relative;z-index:2}"
+            "#liquid-hero{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:0.35;pointer-events:none}</style>"
+            f"<script>{liquid_js}</script>"
             f"<script>{theme_js}</script>"
+            '<script src="qrc:///qtwebchannel/qwebchannel.js"></script>'
             "</head><body data-theme='" + self.theme + "'>"
-            f"<div class='preview-body'>{body_html}</div></body></html>"
+            '<canvas id="liquid-hero"></canvas>'
+            f"<div class='glass preview-body'>{body_html}</div>"
+            "<script>"
+            "if(window.LythicLiquid){try{window.LythicLiquid.initLiquidHero('liquid-hero');}catch(e){}}"
+            "if(window.qt&&window.qt.webChannelTransport&&typeof QWebChannel!=='undefined'){"
+            "new QWebChannel(window.qt.webChannelTransport,function(ch){"
+            "if(ch.objects.backend){window.backend=ch.objects.backend;"
+            "window.backend.themeChanged.connect(function(n){LythicTheme.applyTheme(n);});"
+            "window.backend.graphReady.connect(function(j){console.log('[Lythic] graphReady',j);});"
+            "}});}"
+            "</script></body></html>"
         )
 
     def update_content(self, markdown_text: str) -> str:

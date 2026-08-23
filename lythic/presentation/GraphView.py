@@ -60,6 +60,7 @@ class GraphView:
         glass_css = self._read_asset("css/glass.css")
         components_css = self._read_asset("css/components.css")
         theme_js = self._read_asset("js/theme-manager.js")
+        liquid_js = self._read_asset("js/liquid-hero.js")
         html = (
             "<!doctype html><html><head><meta charset='utf-8'>"
             '<meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -67,16 +68,20 @@ class GraphView:
             f"<style>{theme_css}</style>"
             f"<style>{glass_css}</style>"
             f"<style>{components_css}</style>"
-            "<style>#cy{position:absolute;inset:0;width:100%;height:100vh}"
+            "<style>#liquid-hero{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:0.35;pointer-events:none}"
+            "#cy{position:absolute;inset:0;width:100%;height:100vh;z-index:1}"
             "#info{position:absolute;top:12px;left:12px;z-index:10;"
             "padding:8px 14px;font-size:12px;color:var(--text)}"
-            "</style>"
+            ".glass--info{background:var(--glass-bg);backdrop-filter:blur(16px) saturate(180%);"
+            "border:1px solid var(--glass-border);border-radius:12px}</style>"
             f"{bundle_tag}"
             '<script src="qrc:///qtwebchannel/qwebchannel.js"></script>'
+            f"<script>{liquid_js}</script>"
             f"<script>{theme_js}</script>"
             "</head><body data-theme='" + self.theme + "'>"
+            '<canvas id="liquid-hero"></canvas>'
             "<div id='cy'></div>"
-            "<div class='glass' id='info'>Lythic Graph</div>"
+            "<div class='glass glass--info' id='info'>Lythic Graph</div>"
             f"<script>var data={data_json};"
             "var accent=getComputedStyle(document.documentElement)"
             ".getPropertyValue('--accent').trim()||'#38bdf8';"
@@ -109,6 +114,14 @@ class GraphView:
             "' Edges:'+data.edges.length;"
             "cy.on('tap','node',function(e){"
             "info.textContent=e.target.id()+' — '+e.target.data('label');});"
+            "if(window.LythicLiquid){try{"
+            "window.LythicLiquid.initLiquidHero('liquid-hero');"
+            "}catch(e){}}"
+            "if(typeof QWebChannel!=='undefined'&&typeof qt!=='undefined'){"
+            "new QWebChannel(qt.webChannelTransport,function(ch2){"
+            "if(ch2.objects.backend){window.backend=ch2.objects.backend;"
+            "backend.themeChanged.connect(function(n){"
+            "LythicTheme.applyTheme(n);});}});}"
             "</script></body></html>"
         )
         out_path.write_text(html, encoding="utf-8")

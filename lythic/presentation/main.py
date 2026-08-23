@@ -14,7 +14,19 @@ def main() -> None:
     headless = "--headless" in args
     # first non-flag is vault path
     vault_candidates = [a for a in args if not a.startswith("-")]
-    vault_arg = Path(vault_candidates[0]) if vault_candidates else Path.cwd() / "vault"
+    if vault_candidates:
+        vault_arg = Path(vault_candidates[0])
+        # make vault path robust to cwd (was FileNotFound for themes)
+        if not vault_arg.is_absolute() and not vault_arg.exists():
+            repo_vault = Path(__file__).resolve().parents[2] / vault_arg
+            if repo_vault.exists():
+                vault_arg = repo_vault
+    else:
+        vault_arg = Path.cwd() / "vault"
+        if not vault_arg.exists():
+            repo_fallback = Path(__file__).resolve().parents[2] / "vault"
+            if repo_fallback.exists():
+                vault_arg = repo_fallback
     binding = get_qt_binding()
     print(f"Lythic vault: {vault_arg} (Qt: {binding})")
 

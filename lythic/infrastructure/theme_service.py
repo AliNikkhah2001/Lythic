@@ -27,7 +27,12 @@ class ThemeService:
     """Load TOML themes, resolve vault overlay, persist via QSettings."""
 
     def __init__(self, themes_dir: Path | None = None, vault_root: Path | None = None) -> None:
-        self.themes_dir = themes_dir or Path("assets/themes")
+        if themes_dir is not None:
+            self.themes_dir = themes_dir
+        else:
+            # resolve repo-root assets/themes regardless of cwd (was Path("assets/themes"))
+            dev = Path(__file__).resolve().parents[2] / "assets" / "themes"
+            self.themes_dir = dev if dev.exists() else Path("assets/themes")
         self.vault_root = vault_root
         self._cache: dict[str, Theme] = {}
 

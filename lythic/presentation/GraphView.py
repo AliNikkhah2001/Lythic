@@ -130,7 +130,9 @@ class GraphView:
             if page is not None:
                 page.setWebChannel(channel)
             if self.cytoscape_json:
-                tmp = Path("/tmp/lythic-graph.html")
+                import tempfile
+
+                tmp = Path(tempfile.gettempdir()) / "lythic-graph.html"
                 self.export_html(tmp)
                 html = tmp.read_text(encoding="utf-8")
                 view.setHtml(html, base_url())

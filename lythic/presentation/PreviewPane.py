@@ -67,7 +67,9 @@ class PreviewPane:
             if page is not None:
                 page.setWebChannel(channel)
             doc = self.wrap_document(self.html or "<p>Preview</p>")
-            tmp = Path("/tmp/lythic-preview.html")
+            import tempfile
+
+            tmp = Path(tempfile.gettempdir()) / "lythic-preview.html"
             tmp.write_text(doc, encoding="utf-8")
             view.setHtml(doc, base_url())
             return view

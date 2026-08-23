@@ -167,7 +167,9 @@ def run_app(vault_root: Path) -> int:
             gv.set_graph(refreshed)
             # refresh web view without full reload if possible
             try:
-                new_html = Path("/tmp/lythic-graph.html")
+                import tempfile
+
+                new_html = Path(tempfile.gettempdir()) / "lythic-graph.html"
                 gv.export_html(new_html)
                 if hasattr(graph_widget, "setHtml"):
                     html_str = new_html.read_text(encoding="utf-8")
@@ -196,8 +198,11 @@ def run_app(vault_root: Path) -> int:
 
     win.show()
     # Browser fallback export
-    gv.export_html(Path("/tmp/lythic-graph.html"))
-    print(f"Graph → /tmp/lythic-graph.html ({len(graph.nodes)} nodes, {len(graph.edges)} edges)")
+    import tempfile
+
+    fallback_path = Path(tempfile.gettempdir()) / "lythic-graph.html"
+    gv.export_html(fallback_path)
+    print(f"Graph → {fallback_path} ({len(graph.nodes)} nodes, {len(graph.edges)} edges)")
     print(f"Lythic GUI running — vault={vault_root} 4-pane close window to exit")
 
     code = app.exec()

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Project Lattice — Open-source knowledge engine</title>
+  <meta name="description" content="A sourced architecture, starting-point comparison and roadmap for an open-source Obsidian alternative.">
+  <meta property="og:title" content="Project Lattice">
+  <meta property="og:description" content="An open-source knowledge engine beyond Obsidian.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="nav wrap">
+    <a class="brand" href="#top"><span class="mark" aria-hidden="true">⌁</span>Project Lattice</a>
+    <nav aria-label="Main navigation"><a href="#decision">Decision</a><a href="#architecture">Architecture</a><a href="#roadmap">Roadmap</a><a href="#sources">Sources</a></nav>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div>
+        <p class="eyebrow">Open-source build blueprint · 24 Aug 2026</p>
+        <h1>Own the notes.<br><em>Evolve the graph.</em></h1>
+        <p class="lead">A practical plan for an open-source Obsidian alternative with richer graph exploration, atomic-note maintenance and citation-first local AI.</p>
+        <a class="button" href="#decision">Read the verdict →</a>
+      </div>
+      <div class="graph" aria-label="Abstract knowledge graph">
+        <svg viewBox="0 0 600 480" role="img">
+          <g fill="none" stroke="currentColor" stroke-width="1.5" opacity=".55"><path d="M70 360 180 250 300 320 430 190 550 260"/><path d="M130 90 180 250 340 100 430 190 510 70"/><path d="M70 360 260 410 300 320 550 260"/><path d="M130 90 340 100 510 70"/></g>
+          <g><circle cx="70" cy="360" r="8"/><circle class="lime" cx="130" cy="90" r="12"/><circle cx="180" cy="250" r="17"/><circle class="lime" cx="260" cy="410" r="9"/><circle class="paper" cx="300" cy="320" r="11"/><circle cx="340" cy="100" r="8"/><circle class="lime" cx="430" cy="190" r="16"/><circle class="paper" cx="510" cy="70" r="9"/><circle cx="550" cy="260" r="12"/></g>
+        </svg>
+      </div>
+    </section>
+
+    <section class="section wrap" id="decision">
+      <header class="section-head"><p>01 / Decision</p><h2>Start from Atomic.<br>Design the vault layer first.</h2></header>
+      <div class="verdict">
+        <article><small>Recommended path</small><h3>Fork the architecture, not every assumption.</h3><p>Atomic is the closest MIT-licensed match: Rust, Tauri, CodeMirror, SQLite, vector search, graph rendering, server clients and MCP. Make Markdown files canonical and every index rebuildable.</p><a href="https://github.com/kenforthewin/atomic">Atomic on GitHub →</a></article>
+        <aside><div><b>Borrow</b><h3>SilverBullet’s programmability</h3><p>Queries, commands, templates and sandboxed extensions.</p></div><div><b>Preserve</b><h3>Obsidian-style file ownership</h3><p>Markdown and attachments remain useful without the app.</p></div><div><b>License boundary</b><h3>Study AGPL projects carefully</h3><p>Logseq and TriliumNext are references unless the project deliberately chooses AGPL.</p></div></aside>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <header class="section-head"><p>02 / Starting points</p><h2>The shortlist.</h2></header>
+      <div class="table" role="table">
+        <div class="tr th" role="row"><span>Project</span><span>License</span><span>Best use</span><span>Decision</span></div>
+        <a class="tr" href="https://github.com/kenforthewin/atomic"><strong>Atomic</strong><span>MIT</span><span>AI + semantic graph</span><b>Fork candidate</b></a>
+        <a class="tr" href="https://github.com/silverbulletmd/silverbullet"><strong>SilverBullet</strong><span>MIT</span><span>Programmable Markdown</span><b>Reuse patterns</b></a>
+        <a class="tr" href="https://github.com/nodummd/nodum"><strong>Nodum</strong><span>MIT</span><span>Web-first collaboration</span><b>Web alternative</b></a>
+        <a class="tr" href="https://github.com/foambubble/foam"><strong>Foam</strong><span>MIT</span><span>Narrow VS Code MVP</span><b>Reference</b></a>
+        <a class="tr" href="https://github.com/logseq/logseq"><strong>Logseq</strong><span>AGPL-3.0</span><span>Block graph + Datalog</span><b>Study</b></a>
+        <a class="tr" href="https://github.com/TriliumNext/Trilium"><strong>TriliumNext</strong><span>AGPL-3.0</span><span>Mature automation + scale</span><b>Study</b></a>
+      </div>
+    </section>
+
+    <section class="section dark" id="architecture">
+      <div class="wrap">
+        <header class="section-head"><p>03 / Architecture</p><h2>Files are truth.<br>Everything else is acceleration.</h2></header>
+        <div class="layers">
+          <article><i>A</i><small>Canonical</small><h3>Markdown vault</h3><p>Notes, attachments, Canvas files, saved views and portable events.</p></article>
+          <span>↓ watch + parse</span>
+          <article><i>B</i><small>Rebuildable</small><h3>SQLite engine</h3><p>FTS5, sqlite-vec, typed edges, graph metrics and provenance.</p></article>
+          <span>↓ query + subscribe</span>
+          <article><i>C</i><small>Experience</small><h3>Desktop, web and extensions</h3><p>Tauri, React, CodeMirror, Sigma, capability-based plugins and MCP.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <header class="section-head"><p>04 / Added functionality</p><h2>Make the graph useful.</h2></header>
+      <div class="cards">
+        <article><small>01</small><h3>Graph lenses</h3><p>Combine explicit, semantic, temporal, source, task and property edges.</p></article>
+        <article><small>02</small><h3>Temporal graph</h3><p>Replay how the vault evolved and compare meaningful dates.</p></article>
+        <article><small>03</small><h3>Atomicity coach</h3><p>Review suggested splits, merges, links and bridge notes as diffs.</p></article>
+        <article><small>04</small><h3>Provenance-first AI</h3><p>Cite exact notes, blocks, sources, retrieval details and model versions.</p></article>
+        <article><small>05</small><h3>Saved graph views</h3><p>Store query, filters, layout and annotations as portable files.</p></article>
+        <article><small>06</small><h3>Knowledge health</h3><p>Find orphans, stale hubs, broken links, duplicates and bridge notes.</p></article>
+      </div>
+    </section>
+
+    <section class="section wrap" id="roadmap">
+      <header class="section-head"><p>05 / Roadmap</p><h2>Ship the trustworthy core first.</h2></header>
+      <ol class="roadmap">
+        <li><b>0</b><div><h3>Constitution</h3><p>1–2 weeks · license, vault contract, privacy and plugin rules</p></div></li>
+        <li><b>1</b><div><h3>Vault kernel</h3><p>3–5 weeks · parser, watcher, links, SQLite and FTS5</p></div></li>
+        <li><b>2</b><div><h3>Daily driver</h3><p>4–6 weeks · Tauri, CodeMirror, navigation and safe import</p></div></li>
+        <li><b>3</b><div><h3>Graph engine</h3><p>4–6 weeks · typed edges, lenses, health and saved views</p></div></li>
+        <li><b>4</b><div><h3>Intelligence</h3><p>6–10 weeks · embeddings, cited search and atomicity coach</p></div></li>
+        <li><b>5</b><div><h3>Ecosystem</h3><p>8–12 weeks · plugins, MCP, publishing and optional sync</p></div></li>
+      </ol>
+    </section>
+
+    <section class="section wrap" id="sources">
+      <header class="section-head"><p>06 / Sources</p><h2>Primary links.</h2></header>
+      <div class="links">
+        <a href="https://obsidian.md/help/plugins/graph">Obsidian graph documentation →</a>
+        <a href="https://obsidian.md/license">Obsidian license overview →</a>
+        <a href="https://github.com/kenforthewin/atomic">Atomic repository →</a>
+        <a href="https://github.com/silverbulletmd/silverbullet">SilverBullet repository →</a>
+        <a href="https://github.com/nodummd/nodum">Nodum repository →</a>
+        <a href="https://github.com/logseq/logseq">Logseq repository →</a>
+        <a href="https://github.com/TriliumNext/Trilium">TriliumNext repository →</a>
+        <a href="https://github.com/foambubble/foam">Foam repository →</a>
+        <a href="https://github.com/toeverything/AFFiNE">AFFiNE repository →</a>
+        <a href="https://www.sqlite.org/fts5.html">SQLite FTS5 →</a>
+        <a href="https://github.com/asg017/sqlite-vec">sqlite-vec →</a>
+        <a href="https://www.sigmajs.org/">Sigma.js →</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap"><strong>Project Lattice</strong><span>Markdown first · AI optional · User-owned forever.</span><a href="#top">Back to top ↑</a></footer>
+</body>
+</html>

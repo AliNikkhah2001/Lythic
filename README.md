@@ -54,7 +54,216 @@ python3 -m lythic.presentation.main vault
 # Opens QMainWindow: VaultTree | Editor | Preview (glass) | Graph (Cytoscape.js)
 # Status bar: 4n 4e 3 clusters cytoscape git:main Qt:PySide6
 ```
+# Autonomous Knowledge Compiler for AI Chats
 
+**Executive Summary:** We envision a **daemonized knowledge compiler** that continuously ingests AI chat transcripts (ChatGPT, Claude, Gemini/NotebookLM, local LLM logs, browser captures) and produces an **atomic, interlinked Markdown knowledge base** (e.g. Obsidian or Atomic notes). The system automates cleaning, chunking into “atomic” claims, de-duplication, entity linking, and graph assembly. Each atomic note carries metadata (frontmatter) for provenance, confidence, and relationships. The compiled vault remains portable Markdown (Obsidian/Logseq-compatible) and can be synced or queried by agents. This report surveys the required architecture, algorithms, libraries, and existing open-source projects, and proposes a roadmap. We reference designs like Karpathy’s LLM Wiki, the *Atomic Knowledge* protocol, and tools like Nexus AI chat importer and Obsidian-AI-Exporter as inspiration.
+
+## Architecture & Pipeline
+
+A robust architecture has several stages (see flowchart below): **Data Ingestion → Cleaning/Parsing → Atomic Extraction → Deduplication/Merge → Entity/Relation Extraction → Graph Construction → Output Vault**.  
+
+- **Daemon & Adapters:** A background service (e.g. Python/Node) monitors sources and triggers ingestion. Adapters handle each source (ChatGPT export ZIP, Claude export, Gemini Notebook export, local logs, browser-extensions). For instance, Nexus AI’s CLI can import ChatGPT/Claude ZIPs into Obsidian. Browser extensions like *Obsidian AI Exporter* support “one-click” export of current ChatGPT/Gemini/Claude conversations via the Obsidian Local REST API.
+- **Raw Store:** Raw ingested data (JSON, text, HTML) are kept immutable in a *raw* directory or database. This preserves the original transcripts for provenance. Karpathy’s LLM Wiki advocates keeping raw sources separate.
+- **Cleaning/Parsing:** The compiler normalizes formats (e.g. converting HTML to Markdown, removing UI clutter, resolving timestamp formats). It may drop irrelevant metadata (e.g. system prompts) and ensure textual consistency. Known libraries (e.g. [Mercury Parser](https://github.com/postlight/mercury-parser) for web pages, HTML-to-markdown tools) can help here.
+- **Atomic Extraction (Chunking & Claim Extraction):** The core is splitting transcripts into **atomic knowledge units**. This can combine rule-based and LLM methods. For example, one could use sentence tokenization (SpaCy, NLTK) to identify candidate chunks, then apply an LLM (GPT-4, Claude Code, etc.) with prompts to **summarize or extract “claims” or key points** from each message or exchange. Karpathy’s pattern extracts “key information” and integrates it into wiki pages. The *Atomic Knowledge* framework also envisions an agent “reads the source, extracts key takeaways, and updates wiki pages”. A hybrid approach might use semantic chunking (embedding-based clustering of related sentences) and then LLM paraphrasing.
+- **Deduplication & Merge:** Newly extracted atoms must be checked against existing knowledge to avoid duplicates. Semantic similarity (using sentence embeddings, e.g. via [Sentence Transformers](https://github.com/UKPLab/sentence-transformers)) can flag near-duplicates. Exact duplicates can be merged; similar atoms may trigger a comparison step (automated or human-in-the-loop). The **Nexus plugin uses conversation IDs and message IDs to avoid duplicates**; for knowledge atoms, one can similarly tag or hash content. A vector DB (FAISS, ChromaDB, Weaviate, or even SQLite+embeddings) can help index and search existing atoms for overlaps.
+- **Entity Resolution & Relations:** Each atomic note can include **entities and relationships**. Use NLP pipelines for named-entity recognition (SpaCy, Hugging Face NER models) and entity linking (e.g. linking to Wikipedia or Wikidata via tools like [BLINK](https://github.com/facebookresearch/BLINK) or HuggingFace’s `dbmdz/bert-base-german-cased-ner-conll18` for general NER). Relational extraction libraries like *Relik* can identify predicates between entities. For example, Relik can “map entities in text to Wikipedia and extract relationships”. Coreference resolution (SpaCy’s *coreferee* or AllenNLP) can consolidate references (e.g. “it” → product name) to improve linking.
+- **Typed Metadata & Trust:** We include YAML frontmatter (see below) for each note, containing fields like `title`, `date`, `tags`, `source`, `entities`, `confidence`, etc. Tools like *Claude-to-Obsidian* export add frontmatter (title, date, messageCount, model, etc.). We propose adding fields like `type: claim/entity/procedure`, `id:`, and `confidence:` to help maintenance. The system tracks trust metadata (e.g. flagged contradictions or uncertain claims) and may include a review status (as in Atomic Knowledge’s `meta/candidates/` buffer).
+
+**Maintenance/Updates:** The daemon reruns periodically. New transcripts are ingested and new atoms created. Existing atoms may be refreshed (e.g. if underlying chat is edited). A maintenance loop (drawing from *Atomic Knowledge* and Karpathy) could periodically lint the graph: identify stale or orphaned atoms, contradictions, or outdated links.
+
+```mermaid
+flowchart LR
+  A[ChatGPT/Claude/Gemini Exports<br/>Local LLM Logs<br/>Browser Captures] --> B[Raw Store/Queue]
+  B --> C[Cleaning & Parsing]
+  C --> D[Atomic Extraction<br/>(LLM + NLP chunking)]
+  D --> E[Deduplication & Merge]
+  E --> F[Entity/Relation Extraction]
+  F --> G[Link & Graph Construction]
+  G --> H[Output Vault (Markdown Notes)]
+  style A fill:#ddf,stroke:#333,stroke-width:1px
+  style H fill:#dfd,stroke:#333,stroke-width:1px
+```
+
+## Data Models & Metadata
+
+Each **atomic note** is a Markdown file with YAML frontmatter. Example frontmatter (inspired by Claude-to-Obsidian and Nexus) might be:
+
+```markdown
+---
+id: atom-042
+title: "Gradient Descent Convergence"
+date: 2026-08-24
+tags: [machine-learning, optimization]
+source:
+  - provider: ChatGPT
+    conversation_id: "abc123..."
+    message_index: 2
+entities: [GradientDescent, ConvexFunction]
+confidence: 0.9
+---
+**Claim:** Gradient descent converges linearly on strongly convex functions.
+```
+
+Fields explanation: `id` is a unique atom ID; `title`, `date`, `tags` for organization; `source` lists origins (with provider and chat metadata) to trace provenance; `entities` lists extracted entities; `confidence` scores extraction reliability. This aligns with Nexus plugin’s approach of rich frontmatter (plugin ID, timestamps, etc.) and Claude exporter’s enhanced metadata (title, messageCount, projectName, model). Keeping the frontmatter human- and machine-readable enables Obsidian plugins (Dataview, etc.) to query and filter atoms.
+
+## Algorithms & Libraries
+
+Key NLP tasks and tools include:
+
+- **Text Chunking & Summarization:** Break dialogue into segments. Use sentence or paragraph splitting (SpaCy, NLTK) and then summarize or extract facts with LLMs (GPT-4, Claude, OpenAI’s text models) via prompts. Non-LLM libs like `sumy` (for extractive summarization) or HuggingFace models (PEGASUS, T5) can assist initial chunking.
+- **Claim Extraction:** Techniques from fact-checking research can be adapted. While no dominant open-source “claim extractor” exists, one can prompt LLMs to output bullet-point takeaways. The *Atomic Knowledge* and Karpathy patterns implicitly perform claim extraction. For evaluation, one could compare extracted claims to gold data (if available) measuring precision/recall.
+- **Coreference Resolution:** Use SpaCy’s *coreferee* or AllenNLP’s Coref model to resolve pronouns/aliases (e.g. “it” → “the algorithm”). For instance, SpaCy’s Coreferee can cluster references and rewrite text accordingly.
+- **Semantic Similarity & Clustering:** Compute embeddings (using e.g. Hugging Face `sentence-transformers/all-MiniLM-L6-v2`) for atoms. Scikit-learn or HDBSCAN can cluster similar atoms or detect duplicates. Embedding-based nearest-neighbor search (via FAISS, Annoy, or ChromaDB) identifies semantically similar content for merging.
+- **Entity Linking:** Named entities (people, places, tools) recognized by SpaCy or custom models can be linked to Wikipedia/DBpedia using libraries like [relik](https://github.com/epwalsh/Relik) or Blink, as shown in the Neo4j blog.
+- **Relationship Extraction:** Use Relik’s RE models or Stanford OpenIE to find predicates between entities. For example, Relik can tag an LLM chat to `(Entity → RELATIONSHIP → Entity)` triplets. This populates edges in the semantic graph.
+- **Embedding Storage/Vector DB:** For search and dedupe, use a vector database (FAISS, ChromaDB, Pinecone, Weaviate) or even SQLite with vector support (e.g. using SQLite-vec). The knowledge-base-server uses SQLite FTS5 for text search and local HuggingFace embeddings for semantic search.
+- **Graph Construction:** Libraries like NetworkX or Neo4j can store the resulting knowledge graph. Graphiti (open source) is a context-graph engine with temporal support. If heavy graph querying is needed, Neo4j or other graph DBs could be used; otherwise simple node/link structures (markdown links) suffice for an Obsidian vault.
+
+## Open-Source Tools & Projects
+
+Numerous OSS projects can be re-used or serve as inspiration (see table below):
+
+| Project (Link) | Key Features | Gaps/Notes | License | Maturity |
+|---|---|---|---|---|
+| **Nexus AI Chat Importer** (Superkikim) | Obsidian plugin + CLI; imports ChatGPT/Claude/Mistral/Perplexity exports into Markdown; callouts per role; rich frontmatter for conv metadata; dedup, append mode | Focuses on raw conversation transcripts, not knowledge extraction or graph building | MIT | ⭐️⭐️⭐️ (active plugin, 1.5k forks) |
+| **Obsidian AI Exporter** (sho7650) | Chrome extension exporting ChatGPT/Gemini/Claude to Obsidian via REST API; supports deep-research threads, images, artifacts, YAML metadata | Designed for on-demand export; not an autonomous daemon | MIT | ⭐️⭐️⭐️ (mature, regularly updated) |
+| **Atomic** (kenforthewin) | Personal KB app: auto-chunks Markdown notes (“atoms”), vector search (sqlite-vec), AI-generated wiki synthesis, canvas graph view, agent chat, RSS/web capture, multi-AI support | Doesn’t natively ingest chat logs (notes-focused) | MIT | ⭐️⭐️⭐️⭐️ (active, used widely) |
+| **claude-obsidian** (AgriciDaniel) | Local-first knowledge system: ingest sources, build linked, source-cited vault; agent-driven ingestion and retrieval; provenance/trust tracking | Complex setup; focused on Claude and Agent Skills; steep learning curve | MIT | ⭐️⭐️ (emerging, experimental) |
+| **Atomic Knowledge** (Nimo1987) | Knowledge-base protocol: raw sources → maintained wiki pages; clear workflows (ingest, query, writeback, maintenance); example schemas | Framework/protocol, not a packaged tool; requires agent code | MIT | ⭐️ (conceptual, prototype-level) |
+| **Knowledge-Base-Server** (willynikes2) | Multi-agent KB with SQLite FTS+semantic search, Obsidian sync, MCP server; agents (Claude/GPT/Gemini) share context; CLI setup wizard | More focus on agent context sharing than user-facing graph; server-heavy | MIT | ⭐️⭐️⭐️ (beta to stable) |
+| **llmwiki-compiler** (atomicstrata) | Full LLM knowledge compiler: raw sources → typed Markdown wiki; citation tracking; hybrid retrieval; review/maintenance tools; CLI+SDK+UI; OKF export | Very comprehensive, but complex; learning curve high | MIT | ⭐️⭐️⭐️ (v1.0 released) |
+| **Graphiti** (getzep) | Open-source temporal knowledge graph engine for agents; builds evolving entity-relations graphs with provenance (episodes) | More focused on temporal context graphs; not specific to chat transcripts or markdown | Apache-2.0 | ⭐️⭐️⭐️ (active research project) |
+
+Each of these addresses parts of the problem. For example, **Nexus** and **AI Exporter** handle ingestion and formatting into Markdown, **Atomic** provides a semantic-web UI, and **llmwiki-compiler** embodies the full compile-into-wiki vision. We would likely **combine** approaches: use tools like Nexus as ingestion adapters, then apply an atomic extraction engine (perhaps inspired by llmwiki) to generate new notes.
+
+## Connectors & APIs
+
+- **ChatGPT (OpenAI):** No public history API; use the web export (Settings → Data Controls → Export Data) which produces a ZIP of chats. Alternatively, use the OpenAI Chat Completion API to replay conversations (if logs maintained).
+- **Claude (Anthropic):** Similar approach: UI export (Settings → Privacy → Export Data) yields a zip. Claude also has APIs, but these don’t provide past conversations. The *claude-export* browser script (ryanschiang) shows how to scrape and export current chat to Markdown.
+- **Google Gemini/NotebookLM:** The Google Workspace data export tool can extract NotebookLM chat history. No general user API is provided. Chrome extensions (e.g. *NotebookLM Chat History Exporter*) can help capture transcripts.
+- **Local LLMs:** If using an API or self-hosted model (e.g. via OpenAI, Anthropic, or open models like LLaMA), the application should log dialogues locally (simple JSON logs). No standard library, but one can build a wrapper to write each query/response to file.
+- **Browser Capture Tools:** Chrome extensions and bookmarklets can automate grabbing chats. Examples: *Obsidian AI Exporter*, *ChatGPT2Notion/Claude-to-Obsidian*, or *ChatGPT/Gemini/Claude Export & Navigator*. Many exist (often paid apps) to copy chats to Markdown.
+
+The compiler should include “connectors” to integrate with these flows: e.g. watch a Download folder for new export ZIPs (like Nexus does), or integrate with a Chrome extension’s Local API.
+
+## Storage Options
+
+- **Vault (Markdown files):** The core output is a folder (“vault”) of Markdown notes. Obsidian, Atomic, or Logseq vaults are just file directories. Files can be organized arbitrarily (e.g. by date, by topic). Example structure:
+  ```
+  vault/
+    raw_exports/          # ZIPs or raw JSON sources
+    archives/             # original chat transcripts
+    atoms/                # generated atomic note files
+    attachments/          # images or files from chats
+    templates/            # (optional) static templates
+  ```
+- **SQLite/FTS:** A local SQLite database can index notes for full-text search (with FTS5) and store metadata. The knowledge-base-server uses SQLite FTS5 (with BM25) and a local MiniLM embedding index, enabling fast retrieval without cloud.
+- **Vector Database:** For semantic search/dedup, open-source vector DBs like Chroma (on-disk or in-memory), FAISS or Milvus can be used. A hybrid approach (keyword + embedding) is recommended to balance precision.
+- **Graph Database:** If a full semantic graph is needed, one could use Neo4j or Dgraph. However, for simplicity the “graph” can just be constituted by Markdown wikilinks and YAML relations.
+- **Cloud Sync:** For multi-device or collaboration, an Obsidian-Git or Gitless Sync plugin can sync the vault to GitHub, ensuring backups and versioning.
+
+## Integration & UX
+
+- **Obsidian & Logseq:** Since output is Markdown, it integrates directly. Obsidian’s **Community Plugins** can further enhance functionality. For example, Nexus plugin itself is an Obsidian plugin. The Dataview plugin can query our YAML metadata. Obsidian’s Graph View will visualize interlinked notes (atomic “graph” appears as network).
+- **Atomic.app:** The Atomic app expects “atoms” (notes) in its own format. The frontmatter scheme should be compatible (Atomic expects `title`, `tags`, etc). Since Atomic already auto-chunks and links, integration might require adapting to its conventions (or simply importing its output).
+- **Logseq:** Uses org/Markdown. Our YAML frontmatter can map to Logseq block properties. Plugins like “Sync to Logseq” could bring in notes. The approach is similar.
+- **Plugins:** One could build a custom Obsidian plugin that triggers compilation or updates the atomic graph as chat logs are added. Alternatively, run the compiler externally and have Obsidian auto-scan the vault. A Mermaid chart (above) or directed graph could show the pipeline. UI could include a dashboard report (like Nexus’s import report).
+- **Command-Line & API:** As with Nexus’s CLI and llmwiki’s CLI, a command-line tool (`knowledge-compiler`) could allow headless operation and scheduling (cron, systemd). An HTTP REST API could expose status or allow push of raw data.
+
+## Testing, QA & Metrics
+
+We must ensure quality of extraction and manage vault growth:
+
+- **Precision/Recall for Extraction:** Create a test suite where known dialogues produce expected atoms. Compare against a gold standard to compute precision (relevance of extracted claims) and recall (coverage of key ideas). Use metrics from information extraction (e.g. F1 score).
+- **Graph Health:** Track metrics like number of nodes/edges, orphan pages (no links), average connectivity. Karpathy and llmwiki emphasize “knowledge accumulates” and contradictions flagged. One can measure how many atoms are unsupported (no source citation) or redundant.
+- **Dedup Rate:** Percentage of newly generated atoms merged vs novel. Too many duplicates indicates a problem.
+- **User Evaluation:** Periodically sample auto-generated notes for factuality (maybe using an LLM or human reviewer). Incorporate a “confidence” score from the LLM or classifier on each extraction.
+- **Performance:** Measure time per ingestion cycle, and size of vault (to control bloat). The pipeline should be efficient enough to run incrementally (not re-reading all history).
+
+## Security & Privacy
+
+- **Local-First:** The system is self-hosted, storing all chat data and notes locally. It should not send user transcripts to external servers beyond what the user already does (e.g., interacting with ChatGPT). All processing is on-device (or user’s private server).
+- **Encryption:** If vault sync to cloud is used, the vault folder could be encrypted (Obsidian’s Secure Inbox plugin or git-crypt). Credentials for APIs (OpenAI key, etc.) should be kept in environment variables or secure store.
+- **GDPR/CCPA:** Since data often includes personal info, treat the vault as PII-sensitive. Provide options to purge sensitive atoms. The system should not expose data over the network unless explicitly configured (e.g. disable any public API endpoints by default).
+- **Access Control:** If deployed on a server, use authentication. (Nexus and llmwiki CLI warn that exposing an API without auth is unsafe.)
+- **Audit Trails:** The frontmatter/source logs provide traceability. Every atom links back to original chat content.
+
+## Roadmap & MVP
+
+**Milestones:** (Assuming a small team of devs)
+1. **Phase 0 – Ingestion & Vault Setup:** Build adapters to load ChatGPT and Claude export files and output raw Markdown transcripts (e.g. repurpose Nexus importer or write a Python script). Ensure Obsidian or plain folder integration.
+2. **Phase 1 – Atomic Splitting:** Integrate an LLM or heuristic to split transcripts into atomic notes. Initially, try simple rules (split user/assistant pairs into paragraphs) and wrap in callouts. Then refine using an LLM “bullet summarizer” prompt to create concise atoms.
+3. **Phase 2 – Dedup & Entity Linking:** Compute embeddings for atoms, implement merge logic. Use SpaCy to tag entities in atoms. Experiment with fuzzy matching vs semantic search.
+4. **Phase 3 – Graph Linking:** Link entities across atoms (create [[WikiLinks]] or YAML relations). Possibly auto-generate index pages for key entities (like llmwiki’s concepts).
+5. **Phase 4 – UX & Integration:** Make the tool CLI-friendly and/or Obsidian-plugin-friendly (e.g. an “Auto-compile” command). Publish sample vault folder.
+6. **Phase 5 – QA & Metrics:** Implement evaluation (precision/recall tests) and logging. Solicit user feedback and iterate.
+
+**Tech Stack:** Python is a good choice for NLP (SpaCy, Hugging Face) and running LLM calls. Node/TypeScript could be used for CLI or GUI components (as Nexus and llmwiki do). Database: SQLite or simple files. Infrastructure: systemd service or cloud VM. UI: leverage existing editors (Obsidian) rather than building one.
+
+## Sample Output
+
+**Example Folder Structure:**  
+```
+MyVault/
+├─ raw_exports/             # downloaded chat exports (ZIPs, JSON)
+├─ conversations/           # imported transcript notes
+│   ├─ ChatGPT-2026-08-22.md
+│   └─ Claude-2026-08-20.md
+├─ atoms/                   # generated atomic notes
+│   ├─ atom-001-gradient-descent.md
+│   ├─ atom-002-binary-search.md
+│   └─ atom-003-backtracking.md
+├─ attachments/             # images/files from chats
+├─ templates/
+└─ README.md                # explains vault usage
+```
+
+**Sample Atomic Note (`atoms/atom-001-gradient-descent.md`):**
+```markdown
+---
+id: atom-001
+title: "Gradient Descent Convergence Rate"
+date: 2026-08-24
+tags: [optimization, machine-learning]
+source:
+  - provider: ChatGPT
+    conversation_id: "xyz789"
+    message_index: 3
+entities: [GradientDescent, ConvexFunction]
+confidence: 0.92
+---
+**Claim:** On strongly convex quadratic functions, gradient descent converges linearly (exponentially fast). This is because the function’s condition number bounds the decay rate of error. In practice, the learning rate must be ≤2/(max eigenvalue) for convergence.
+```
+
+This note is **atomic** (single claim), cites its source conversation, and is tagged for search. Such notes can be automatically created from chat transcripts via LLM prompting.
+
+## Mermaid Pipeline Diagram
+
+```mermaid
+flowchart LR
+  A[Ingest: ChatGPT/Claude/Gemini exports,<br/>Local LLM logs, Browser captures]
+  A --> B[Raw Store (immutable transcripts/JSON)]
+  B --> C[Clean & Preprocess (Markdownify, trim)]
+  C --> D[Atomic Extract<br/>(chunking & LLM summarization)]
+  D --> E[Deduplication & Merge (embeddings, hashing)]
+  E --> F[Entity Recognition & Linking<br/>Relationship Extraction]
+  F --> G[Graph Assembly<br/>(link notes, build index)]
+  G --> H[Output Vault: Markdown notes (Obsidian/Logseq)]
+```
+
+**Legend:** Each box is a pipeline stage. The system continuously loops new items (solid arrow is main flow). (Mermaid code above can be rendered to visualize this pipeline.)
+
+## Risks & Challenges
+
+- **Provider Format Changes:** As Nexus warns, chat export formats are unofficial and can change, breaking parsers. Mitigation: write robust parsers or monitor for changes, use JSON when possible.
+- **LLM Hallucinations:** Automated extraction/summarization may hallucinate. Care needed: always attach source citations and confidence. Possibly require a human review step for important claims.
+- **Data Overload:** Large chat archives could produce many atoms. Need policies to trim or archive old/chaff content. Possibly prioritize chats by relevance.
+- **Complexity:** Building a truly autonomous compiler is ambitious. A minimal viable product (MVP) might drop advanced features (trust gates, typed relations) initially.
+- **Privacy:** Chats often contain private info. Users must trust the system not to leak it. Keep processing offline and consider encryption if syncing.
+- **Version Control:** Editing or deleting atoms must propagate (Nexus handles migrating folder changes). Our system should handle re-ingestion and merges carefully.
+
+In summary, an autonomous knowledge compiler is feasible by integrating existing tools: chat ingestors (Obsidian plugins, browser ext.), NLP/LLM pipelines (embedding/clustering, claim extraction), and knowledge management frameworks (Atomic, llmwiki). The vision aligns with recent thought leadership on LLM-powered second brains. By combining a persistent Markdown vault with LLM-driven processing, one can create a self-maintaining personal knowledge graph built from one’s own AI interactions. **Sources:** Karpathy’s LLM Wiki, Atomic Knowledge spec, Nexus AI importer docs, Obsidian-AI-Exporter README, Atomic app README, and Atomicstrata’s llmwiki , among others (see table).
 ---
 
 ## 🏗️ Architecture (ADR-001)

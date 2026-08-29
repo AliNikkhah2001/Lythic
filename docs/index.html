@@ -1,261 +1,116 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lythic — E2E Implementation Report</title>
-<style>
-:root {
-  --bg: #0f172a; --surface: #1e293b; --text: #e2e8f0; --muted: #94a3b8;
-  --accent: #38bdf8; --accent-hover: #0ea5e9; --success: #34d399;
-  --warning: #fbbf24; --error: #fb7185; --border: rgba(255,255,255,0.18);
-  --radius: 12px; --glass-bg: rgba(255,255,255,0.10);
-  --glass-border: rgba(255,255,255,0.18); --blur: 16px;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;line-height:1.6}
-.container{max-width:1100px;margin:0 auto;padding:24px}
-.glass{background:var(--glass-bg);backdrop-filter:blur(var(--blur)) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:0 8px 32px rgba(0,0,0,0.10)}
-header{text-align:center;padding:48px 24px 32px}
-header h1{font-size:32px;font-weight:700;margin-bottom:8px}
-header p{color:var(--muted);font-size:16px}
-.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;margin:2px}
-.badge-done{background:rgba(52,211,153,0.15);color:var(--success);border:1px solid rgba(52,211,153,0.3)}
-.badge-tech{background:rgba(56,189,248,0.15);color:var(--accent);border:1px solid rgba(56,189,248,0.3)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin:24px 0}
-.card{padding:20px}
-.card h3{font-size:16px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.card p,.card li{color:var(--muted);font-size:14px}
-.card ul{list-style:none;padding:0}
-.card li{padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
-.card li::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--success);margin-right:8px}
-.screenshot{margin:24px 0;text-align:center}
-.screenshot img{max-width:100%;border-radius:var(--radius);border:1px solid var(--border);box-shadow:0 16px 48px rgba(0,0,0,0.25)}
-.screenshot figcaption{color:var(--muted);font-size:13px;margin-top:8px}
-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px}
-th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
-th{background:var(--surface);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted)}
-td{color:var(--text)}
-.status{display:inline-flex;align-items:center;gap:6px}
-.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--success)}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
-.stat{text-align:center;padding:16px}
-.stat .num{font-size:28px;font-weight:700;color:var(--accent)}
-.stat .label{font-size:12px;color:var(--muted);margin-top:4px}
-.arch{padding:24px;margin:24px 0}
-.arch pre{background:rgba(0,0,0,0.3);padding:16px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;color:var(--text)}
-.timeline{position:relative;padding-left:24px;margin:16px 0}
-.timeline::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border)}
-.timeline .item{position:relative;padding:12px 0 12px 20px;font-size:14px}
-.timeline .item::before{content:"";position:absolute;left:-20px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--success);border:2px solid var(--bg)}
-.timeline .item .title{font-weight:600;color:var(--text)}
-.timeline .item .desc{color:var(--muted);font-size:13px;margin-top:2px}
-footer{text-align:center;padding:32px;color:var(--muted);font-size:13px;border-top:1px solid var(--border);margin-top:48px}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Project Lattice — Open-source knowledge engine</title>
+  <meta name="description" content="A sourced architecture, starting-point comparison and roadmap for an open-source Obsidian alternative.">
+  <meta property="og:title" content="Project Lattice">
+  <meta property="og:description" content="An open-source knowledge engine beyond Obsidian.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header>
-  <h1>Lythic</h1>
-  <p>Obsidian 1:1 Clone in Python (PySide6) — Implementation Report</p>
-  <div style="margin-top:12px">
-    <span class="badge badge-done">10/10 Milestones Complete</span>
-    <span class="badge badge-tech">PySide6 6.11.2</span>
-    <span class="badge badge-tech">45 Tests Passing</span>
-    <span class="badge badge-tech">4 Themes</span>
-  </div>
-</header>
+  <header class="nav wrap">
+    <a class="brand" href="#top"><span class="mark" aria-hidden="true">⌁</span>Project Lattice</a>
+    <nav aria-label="Main navigation"><a href="#decision">Decision</a><a href="#architecture">Architecture</a><a href="#roadmap">Roadmap</a><a href="#sources">Sources</a></nav>
+  </header>
 
-<div class="container">
+  <main id="top">
+    <section class="hero wrap">
+      <div>
+        <p class="eyebrow">Open-source build blueprint · 24 Aug 2026</p>
+        <h1>Own the notes.<br><em>Evolve the graph.</em></h1>
+        <p class="lead">A practical plan for an open-source Obsidian alternative with richer graph exploration, atomic-note maintenance and citation-first local AI.</p>
+        <a class="button" href="#decision">Read the verdict →</a>
+      </div>
+      <div class="graph" aria-label="Abstract knowledge graph">
+        <svg viewBox="0 0 600 480" role="img">
+          <g fill="none" stroke="currentColor" stroke-width="1.5" opacity=".55"><path d="M70 360 180 250 300 320 430 190 550 260"/><path d="M130 90 180 250 340 100 430 190 510 70"/><path d="M70 360 260 410 300 320 550 260"/><path d="M130 90 340 100 510 70"/></g>
+          <g><circle cx="70" cy="360" r="8"/><circle class="lime" cx="130" cy="90" r="12"/><circle cx="180" cy="250" r="17"/><circle class="lime" cx="260" cy="410" r="9"/><circle class="paper" cx="300" cy="320" r="11"/><circle cx="340" cy="100" r="8"/><circle class="lime" cx="430" cy="190" r="16"/><circle class="paper" cx="510" cy="70" r="9"/><circle cx="550" cy="260" r="12"/></g>
+        </svg>
+      </div>
+    </section>
 
-<section>
-  <h2 style="margin-bottom:16px">Overview</h2>
-  <div class="stats">
-    <div class="stat glass"><div class="num">10</div><div class="label">Milestones</div></div>
-    <div class="stat glass"><div class="num">45</div><div class="label">Tests</div></div>
-    <div class="stat glass"><div class="num">17</div><div class="label">Presentation Files</div></div>
-    <div class="stat glass"><div class="num">4</div><div class="label">Glass Themes</div></div>
-  </div>
-</section>
+    <section class="section wrap" id="decision">
+      <header class="section-head"><p>01 / Decision</p><h2>Start from Atomic.<br>Design the vault layer first.</h2></header>
+      <div class="verdict">
+        <article><small>Recommended path</small><h3>Fork the architecture, not every assumption.</h3><p>Atomic is the closest MIT-licensed match: Rust, Tauri, CodeMirror, SQLite, vector search, graph rendering, server clients and MCP. Make Markdown files canonical and every index rebuildable.</p><a href="https://github.com/kenforthewin/atomic">Atomic on GitHub →</a></article>
+        <aside><div><b>Borrow</b><h3>SilverBullet’s programmability</h3><p>Queries, commands, templates and sandboxed extensions.</p></div><div><b>Preserve</b><h3>Obsidian-style file ownership</h3><p>Markdown and attachments remain useful without the app.</p></div><div><b>License boundary</b><h3>Study AGPL projects carefully</h3><p>Logseq and TriliumNext are references unless the project deliberately chooses AGPL.</p></div></aside>
+      </div>
+    </section>
 
-<section>
-  <h2 style="margin-bottom:16px">Screenshots</h2>
-  <div class="grid">
-    <figure class="screenshot glass">
-      <img src="screenshots/lythic-main.png" alt="Lythic 4-Pane App">
-      <figcaption>4-Pane App — VaultTree | Editor | Preview | Graph (Dracula theme)</figcaption>
-    </figure>
-    <figure class="screenshot glass">
-      <img src="screenshots/lythic-graph.png" alt="Knowledge Graph">
-      <figcaption>Knowledge Graph — Cytoscape.js with spring layout + Louvain clustering</figcaption>
-    </figure>
-  </div>
-  <figure class="screenshot glass" style="max-width:600px;margin:16px auto">
-    <img src="screenshots/lythic-preview.png" alt="Preview Pane">
-    <figcaption>Preview Pane — markdown-it rendering with glass design system + KaTeX math</figcaption>
-  </figure>
-</section>
+    <section class="section wrap">
+      <header class="section-head"><p>02 / Starting points</p><h2>The shortlist.</h2></header>
+      <div class="table" role="table">
+        <div class="tr th" role="row"><span>Project</span><span>License</span><span>Best use</span><span>Decision</span></div>
+        <a class="tr" href="https://github.com/kenforthewin/atomic"><strong>Atomic</strong><span>MIT</span><span>AI + semantic graph</span><b>Fork candidate</b></a>
+        <a class="tr" href="https://github.com/silverbulletmd/silverbullet"><strong>SilverBullet</strong><span>MIT</span><span>Programmable Markdown</span><b>Reuse patterns</b></a>
+        <a class="tr" href="https://github.com/nodummd/nodum"><strong>Nodum</strong><span>MIT</span><span>Web-first collaboration</span><b>Web alternative</b></a>
+        <a class="tr" href="https://github.com/foambubble/foam"><strong>Foam</strong><span>MIT</span><span>Narrow VS Code MVP</span><b>Reference</b></a>
+        <a class="tr" href="https://github.com/logseq/logseq"><strong>Logseq</strong><span>AGPL-3.0</span><span>Block graph + Datalog</span><b>Study</b></a>
+        <a class="tr" href="https://github.com/TriliumNext/Trilium"><strong>TriliumNext</strong><span>AGPL-3.0</span><span>Mature automation + scale</span><b>Study</b></a>
+      </div>
+    </section>
 
-<section>
-  <h2 style="margin-bottom:16px">Milestones</h2>
-  <div class="glass" style="padding:20px">
-    <table>
-      <thead>
-        <tr><th>ID</th><th>Milestone</th><th>Features</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>M1</td><td>Scaffold</td><td>ADR-001, domain (Note/Tag/WikiLink/VaultGraph), ObsidianMarkdownParser, SqliteVaultRepo (WAL+FTS5), VaultIndexer (watchdog), SubprocessGitAdapter</td><td class="status">Complete</td></tr>
-        <tr><td>M2</td><td>Graph Visible</td><td>Local Cytoscape.js bundle, QWebChannel bridge, ThemedWebView, 4-pane splitter, ego_graph 2-hop, deduped edges</td><td class="status">Complete</td></tr>
-        <tr><td>M3</td><td>Large Graph</td><td>QThread LayoutWorker (off-main-thread spring_layout), sigma.js WebGL switch at 10k nodes</td><td class="status">Complete</td></tr>
-        <tr><td>M4</td><td>Clustering</td><td>Louvain communities (networkx), compound Cytoscape nodes, cluster color palette</td><td class="status">Complete</td></tr>
-        <tr><td>M5</td><td>Editor</td><td>QTextEdit (not QPlainTextEdit), EditingToolbar 40+ cmds, QUndoCommand, font/heading/lists/link/table</td><td class="status">Complete</td></tr>
-        <tr><td>M6</td><td>Code/Math</td><td>Pygments CodeBlockHighlighter, KaTeX math rendering (CDN + local bundle fallback)</td><td class="status">Complete</td></tr>
-        <tr><td>M7</td><td>Media/Sheet</td><td>MediaEmbed (QPixmap+QMediaPlayer+drag-to-vault), SheetView (QTextTable+openpyxl)</td><td class="status">Complete</td></tr>
-        <tr><td>M8</td><td>Git Sync</td><td>GitAutoSync QTimer 30s, Dulwich fallback, keyring token store, pathspec ignore guard</td><td class="status">Complete</td></tr>
-        <tr><td>M9</td><td>Design System</td><td>glass.css (css.glass 451★ recipe), tokens.css (100+ CSS vars), components.css, liquidGL WebGL hero, QSS Fusion native shell</td><td class="status">Complete</td></tr>
-        <tr><td>M10</td><td>AI Service</td><td>AIService (metis api.metisai.ir), offline heuristics (clean/style/summarize/fix-frontmatter)</td><td class="status">Complete</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
+    <section class="section dark" id="architecture">
+      <div class="wrap">
+        <header class="section-head"><p>03 / Architecture</p><h2>Files are truth.<br>Everything else is acceleration.</h2></header>
+        <div class="layers">
+          <article><i>A</i><small>Canonical</small><h3>Markdown vault</h3><p>Notes, attachments, Canvas files, saved views and portable events.</p></article>
+          <span>↓ watch + parse</span>
+          <article><i>B</i><small>Rebuildable</small><h3>SQLite engine</h3><p>FTS5, sqlite-vec, typed edges, graph metrics and provenance.</p></article>
+          <span>↓ query + subscribe</span>
+          <article><i>C</i><small>Experience</small><h3>Desktop, web and extensions</h3><p>Tauri, React, CodeMirror, Sigma, capability-based plugins and MCP.</p></article>
+        </div>
+      </div>
+    </section>
 
-<section>
-  <h2 style="margin-bottom:16px">Architecture</h2>
-  <div class="arch glass">
-    <pre>
-presentation (PySide6 Qt widgets)
-    ├── VaultTree (QTreeView + QFileSystemModel)
-    ├── EditorPane (QTextEdit + EditingToolbar)
-    ├── PreviewPane (QWebEngineView + glass CSS)
-    ├── GraphView (QWebEngineView + Cytoscape.js)
-    └── SettingsDialog (QSettings + live theme preview)
-          │
-application (façade)
-    ├── VaultService (index_all, search, build_graph)
-    └── AIService (clean, style, summarize, fix_frontmatter)
-          │
-domain (value objects, no DB)
-    ├── Note, Tag, WikiLink, VaultConfig
-    ├── VaultGraph (to_cytoscape_json, ego_graph, spring_layout)
-    └── Cluster (Louvain communities)
-          │
-infrastructure (adapters)
-    ├── ObsidianMarkdownParser (markdown-it-py + frontmatter)
-    ├── SqliteVaultRepo (WAL + FTS5 + JSON1)
-    ├── VaultIndexer (watchdog + QTimer 200ms debounce)
-    ├── SubprocessGitAdapter / DulwichGitAdapter
-    ├── ThemeService (TOML → CSS vars)
-    ├── QssBuilder (QSS Fusion dark glass)
-    └── LatexRenderer (KaTeX CDN + bundle)</pre>
-  </div>
-</section>
+    <section class="section wrap">
+      <header class="section-head"><p>04 / Added functionality</p><h2>Make the graph useful.</h2></header>
+      <div class="cards">
+        <article><small>01</small><h3>Graph lenses</h3><p>Combine explicit, semantic, temporal, source, task and property edges.</p></article>
+        <article><small>02</small><h3>Temporal graph</h3><p>Replay how the vault evolved and compare meaningful dates.</p></article>
+        <article><small>03</small><h3>Atomicity coach</h3><p>Review suggested splits, merges, links and bridge notes as diffs.</p></article>
+        <article><small>04</small><h3>Provenance-first AI</h3><p>Cite exact notes, blocks, sources, retrieval details and model versions.</p></article>
+        <article><small>05</small><h3>Saved graph views</h3><p>Store query, filters, layout and annotations as portable files.</p></article>
+        <article><small>06</small><h3>Knowledge health</h3><p>Find orphans, stale hubs, broken links, duplicates and bridge notes.</p></article>
+      </div>
+    </section>
 
-<section>
-  <h2 style="margin-bottom:16px">Implementation Timeline</h2>
-  <div class="glass" style="padding:20px">
-    <div class="timeline">
-      <div class="item"><div class="title">M1 — Scaffold</div><div class="desc">ADR-001 PySide6 LGPL, domain value objects, markdown parser, SQLite repo, git service, watchdog indexer, 30 tests. Commit a8916e1.</div></div>
-      <div class="item"><div class="title">M2 — Graph Visible</div><div class="desc">Local Cytoscape.js bundle (353K), QWebChannel bridge, ThemedWebView, 4-pane splitter layout, ego_graph 2-hop, deduped edges. Commit 88a41a7.</div></div>
-      <div class="item"><div class="title">M3-M4 — Large Graph + Clustering</div><div class="desc">QThread LayoutWorker for 10k nodes, sigma.js WebGL switch, Louvain communities, compound Cytoscape nodes, cluster palette. Commit d38238c.</div></div>
-      <div class="item"><div class="title">M5-M7 — Editor + Code/Math + Media/Sheet</div><div class="desc">QTextEdit + EditingToolbar 40+ cmds, Pygments syntax highlighting, KaTeX math, MediaEmbed (QPixmap+QMediaPlayer), SheetView (QTextTable+openpyxl). Commit d38238c.</div></div>
-      <div class="item"><div class="title">M8 — Git Sync</div><div class="desc">GitAutoSync QTimer 30s, Dulwich fallback, keyring token store, pathspec ignore guard, rebase conflict handling. Commit d38238c.</div></div>
-      <div class="item"><div class="title">M9 — Design System</div><div class="desc">glass.css (css.glass 451★ + Hype4 recipe), tokens.css (100+ vars), components.css, liquidGL WebGL hero, 4 TOML themes (default/dracula/glassmorphism/tokyo-night), QSS Fusion native shell. Commit b4ac270.</div></div>
-      <div class="item"><div class="title">M10 — AI Service</div><div class="desc">AIService with metis api.metisai.ir integration + offline heuristics (clean/style/summarize/fix-frontmatter). Commit d38238c.</div></div>
-      <div class="item"><div class="title">Polish + Screenshots + README</div><div class="desc">Font fixes (SF Mono/PT Mono), pathspec deprecation fix, ruff lint clean, E2E screenshots, detailed README, GitHub Pages report.</div></div>
-    </div>
-  </div>
-</section>
+    <section class="section wrap" id="roadmap">
+      <header class="section-head"><p>05 / Roadmap</p><h2>Ship the trustworthy core first.</h2></header>
+      <ol class="roadmap">
+        <li><b>0</b><div><h3>Constitution</h3><p>1–2 weeks · license, vault contract, privacy and plugin rules</p></div></li>
+        <li><b>1</b><div><h3>Vault kernel</h3><p>3–5 weeks · parser, watcher, links, SQLite and FTS5</p></div></li>
+        <li><b>2</b><div><h3>Daily driver</h3><p>4–6 weeks · Tauri, CodeMirror, navigation and safe import</p></div></li>
+        <li><b>3</b><div><h3>Graph engine</h3><p>4–6 weeks · typed edges, lenses, health and saved views</p></div></li>
+        <li><b>4</b><div><h3>Intelligence</h3><p>6–10 weeks · embeddings, cited search and atomicity coach</p></div></li>
+        <li><b>5</b><div><h3>Ecosystem</h3><p>8–12 weeks · plugins, MCP, publishing and optional sync</p></div></li>
+      </ol>
+    </section>
 
-<section>
-  <h2 style="margin-bottom:16px">Test Results</h2>
-  <div class="grid">
-    <div class="card glass">
-      <h3>Unit Tests (35)</h3>
-      <ul>
-        <li>test_wikilink_parser — 8 tests (wiki, tags, callouts, frontmatter, render)</li>
-        <li>test_indexer — 4 tests (upsert, backlinks, migration, delete)</li>
-        <li>test_graph_builder — 5 tests (cytoscape, ego_graph, dedup, positions, empty)</li>
-        <li>test_git_service — 6 tests (status, commit, sync, dulwich, safe_path)</li>
-        <li>test_qt_compat — 2 tests (binding name, fallback import)</li>
-        <li>test_vault_domain — 5 tests (tag, wikilink, vault, graph, config)</li>
-        <li>test_new_milestones — 10 tests (themes, resources, latex, clustering, AI, etc.)</li>
-      </ul>
-    </div>
-    <div class="card glass">
-      <h3>Integration Tests (10)</h3>
-      <ul>
-        <li>test_vault_repo — 5 tests (e2e index + search + graph + backlinks)</li>
-        <li>test_watcher — 5 tests (tmp_path observer + debounce + ignore)</li>
-      </ul>
-    </div>
-  </div>
-</section>
+    <section class="section wrap" id="sources">
+      <header class="section-head"><p>06 / Sources</p><h2>Primary links.</h2></header>
+      <div class="links">
+        <a href="https://obsidian.md/help/plugins/graph">Obsidian graph documentation →</a>
+        <a href="https://obsidian.md/license">Obsidian license overview →</a>
+        <a href="https://github.com/kenforthewin/atomic">Atomic repository →</a>
+        <a href="https://github.com/silverbulletmd/silverbullet">SilverBullet repository →</a>
+        <a href="https://github.com/nodummd/nodum">Nodum repository →</a>
+        <a href="https://github.com/logseq/logseq">Logseq repository →</a>
+        <a href="https://github.com/TriliumNext/Trilium">TriliumNext repository →</a>
+        <a href="https://github.com/foambubble/foam">Foam repository →</a>
+        <a href="https://github.com/toeverything/AFFiNE">AFFiNE repository →</a>
+        <a href="https://www.sqlite.org/fts5.html">SQLite FTS5 →</a>
+        <a href="https://github.com/asg017/sqlite-vec">sqlite-vec →</a>
+        <a href="https://www.sigmajs.org/">Sigma.js →</a>
+      </div>
+    </section>
+  </main>
 
-<section>
-  <h2 style="margin-bottom:16px">Technology Stack</h2>
-  <div class="grid">
-    <div class="card glass">
-      <h3>Core</h3>
-      <ul>
-        <li>PySide6 6.11.2 (LGPL — no GPL viral)</li>
-        <li>Python 3.11+ (strict mode)</li>
-        <li>markdown-it-py (CommonMark + OFM)</li>
-        <li>python-frontmatter (YAML parsing)</li>
-      </ul>
-    </div>
-    <div class="card glass">
-      <h3>Infrastructure</h3>
-      <ul>
-        <li>SQLite WAL + FTS5 + JSON1</li>
-        <li>watchdog (FSEvents + QTimer 200ms)</li>
-        <li>Dulwich (pure Python git fallback)</li>
-        <li>networkx (graph layout + Louvain)</li>
-      </ul>
-    </div>
-    <div class="card glass">
-      <h3>Design</h3>
-      <ul>
-        <li>Cytoscape.js (graph rendering)</li>
-        <li>glass.css (css.glass 451★ recipe)</li>
-        <li>KaTeX (math rendering)</li>
-        <li>Pygments (syntax highlighting)</li>
-      </ul>
-    </div>
-    <div class="card glass">
-      <h3>Quality</h3>
-      <ul>
-        <li>ruff (lint + format, 100 cols)</li>
-        <li>mypy --strict (type safety)</li>
-        <li>pytest + coverage 80%+</li>
-        <li>45 tests passing</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2 style="margin-bottom:16px">Design System</h2>
-  <div class="glass" style="padding:20px">
-    <table>
-      <thead><tr><th>Theme</th><th>Background</th><th>Accent</th><th>Glass Blur</th><th>Radius</th></tr></thead>
-      <tbody>
-        <tr><td>Default (Slate)</td><td>#0f172a</td><td>#38bdf8 (Sky)</td><td>16px</td><td>12px</td></tr>
-        <tr><td>Dracula</td><td>#282a36</td><td>#bd93f9 (Purple)</td><td>18px</td><td>12px</td></tr>
-        <tr><td>Glassmorphism</td><td>#0f172a</td><td>#38bdf8 (Sky)</td><td>20px</td><td>24px</td></tr>
-        <tr><td>Tokyo Night</td><td>#1a1b26</td><td>#7aa2f7 (Blue)</td><td>14px</td><td>14px</td></tr>
-      </tbody>
-    </table>
-    <p style="margin-top:12px;color:var(--muted);font-size:13px">
-      Glass recipe: rgba + blur(12-20px) + saturate(160-200%) + border 1px rgba(255,255,255,0.18) + radius 12-24px + shadow 0 8px 32px.
-      <br>Sources: css.glass 451★, Hype4.academy, Tailwind backdrop-blur, shadcn supports-[backdrop-filter], neumorphism.io contrast.
-    </p>
-  </div>
-</section>
-
-</div>
-
-<footer>
-  <p>Lythic — Built with PySide6 + markdown-it-py + Cytoscape.js + glass.css</p>
-  <p style="margin-top:4px">Report generated August 2026 &middot; Ali Nikkhah</p>
-</footer>
+  <footer class="wrap"><strong>Project Lattice</strong><span>Markdown first · AI optional · User-owned forever.</span><a href="#top">Back to top ↑</a></footer>
 </body>
 </html>

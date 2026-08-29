@@ -1,9 +1,4 @@
 title: Project Lattice
-description: Open-source Obsidian alternative — architecture, research and roadmap
+description: Open-source Obsidian alternative - architecture, research and roadmap
 theme: minima
 markdown: kramdown
-
-exclude:
-  - lattice/assets
-include:
-  - .nojekyll

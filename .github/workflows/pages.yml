@@ -1,4 +1,4 @@
-﻿name: Deploy GitHub Pages
+name: Deploy GitHub Pages
 
 on:
   push:
@@ -24,34 +24,11 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Setup Ruby for Jekyll
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./docs
           destination: ./_site
-        continue-on-error: true
-
-      - name: Fallback - copy docs directly if Jekyll failed
-        if: failure()
-        run: |
-          mkdir -p _site
-          cp -r docs/* _site/ || true
-          cp -r docs/.nojekyll _site/ 2>/dev/null || true
-
-      - name: Ensure static lattice assets present
-        run: |
-          ls -la docs/lattice/ || true
-          ls -la docs/research/ || true
-          ls -la _site/ || true
-          mkdir -p _site/lattice/assets
-          cp -r docs/lattice/* _site/lattice/ 2>/dev/null || true
-          cp -r docs/research _site/research 2>/dev/null || true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
